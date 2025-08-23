@@ -29,7 +29,7 @@ class Order(Base):
     passenger_info: Mapped[str] = mapped_column(String(255), default=None)
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.NEW)
 
-    driver_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=True)
+    driver_id: Mapped[int] = mapped_column(BigInteger,ForeignKey("users.id"), nullable=True)
     driver: Mapped["User"] = relationship("User", back_populates="orders")
 
     bids: Mapped[list["Bid"]] = relationship("Bid", back_populates="order", cascade="all, delete-orphan")

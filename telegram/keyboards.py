@@ -29,6 +29,26 @@ admin_panel = ReplyKeyboardMarkup(
         one_time_keyboard=True
     )
 
+choice_order_mod = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="FCFS")], [KeyboardButton(text="AUCTION")]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+
+
+def generate_ikb_order_control(order_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            # [
+            #     InlineKeyboardButton(text="✅ Завершить заказ", callback_data=f"complete_{order_id}"),
+            # ],
+            [
+                InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_{order_id}")
+            ]
+        ]
+    )
 
 
 ikb_admin_choice = InlineKeyboardMarkup(

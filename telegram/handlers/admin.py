@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram import Router
 
 from telegram.states import OrderForm
-from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel
+from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel, choice_region, choice_order_mod
 from telegram.bot import bot
 
 from db.crud.user import get_user_by_tg_id, create_user, update_user
@@ -23,11 +23,12 @@ async def broadcast_order(bot, order: Order):
     for driver in drivers:
         await bot.send_message(
             driver.tg_id,
-            f"Новый заказ: {order.from_address} → {order.to_address}\n"
-            f"Время: {order.scheduled_time}\n"
-            f"Класс авто: {order.car_class}\n"
-            f"Режим: {order.mode}\n"
-            f"Комментарии: {order.comments or 'нет'}",
+            f"❗ Новый заказ №{order.id}:\n"
+            f"🕐 Время: {order.scheduled_time}\n"
+            f"🚖 Класс авто: {order.car_class}\n"
+            f"⛳ {order.from_address} → {order.to_address}\n"
+            f"💬 Комментарии: {order.comments or 'нет'}\n"
+            f"💰 Стоимость: {order.price if order.price else 'Аукцион'}",
             reply_markup=build_order_buttons(order)
         )
 
@@ -74,11 +75,14 @@ async def new_order_start(message: types.Message, state: FSMContext):
         return
 
     await state.set_state(OrderForm.city)
-    await message.answer("Введите город заказа:")
+    await message.answer("Введите регион заказа:", reply_markup=choice_region)
 
 
 @router_admin.message(OrderForm.city)
 async def order_city(message: types.Message, state: FSMContext):
+    if message.text not in ["Краснодарский край", "Ставропольский край", "Крым"]:
+        await message.answer("Пожалуйста, выберите регион из предложенных вариантов.")
+        return
     await state.update_data(city=message.text)
     await state.set_state(OrderForm.from_address)
     await message.answer("Откуда (адрес подачи):")
@@ -122,7 +126,7 @@ async def order_price(message: types.Message, state: FSMContext):
     price = float(text) if text else None
     await state.update_data(price=price)
     await state.set_state(OrderForm.mode)
-    await message.answer("Режим заказа: FCFS или AUCTION?")
+    await message.answer("Режим заказа: FCFS или AUCTION?", reply_markup=choice_order_mod)
 
 
 @router_admin.message(OrderForm.mode)

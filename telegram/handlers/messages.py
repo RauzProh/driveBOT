@@ -3,14 +3,17 @@ import asyncio
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 
-from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approve,choice_region
+from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approve, choice_region, generate_ikb_order_control
 
 from db.models.user import Role, Status, User
 from db.crud.user import create_user, get_user_by_tg_id, update_user
+from db.crud.order import create_order, get_order_by_id, update_order
 from db.core import get_admins, take_order, get_actual_orders_for_admin
 from db.models.order import Order, OrderStatus, OrderMode
 from telegram.states import OrderForm, Get_Photos
 from telegram.texts import reg_finish,text_get_car_photos,generate_text_new_reg_user
+from telegram.bot import bot
+from telegram.handlers.admin import broadcast_order
 
 from aiogram import Router
 
@@ -82,7 +85,7 @@ async def messages(message: types.Message, state: FSMContext):
             return
 
         await state.set_state(OrderForm.city)
-        await message.answer("Введите город заказа:")
+        await message.answer("Введите регион заказа:", reply_markup=choice_region)
         return
     
     if message.text == 'Управлять заказами' and res.role == Role.ADMIN:
@@ -94,7 +97,7 @@ async def messages(message: types.Message, state: FSMContext):
 
         msg = "Актуальные заказы:\n"
         for order in from_db_orders:
-            msg += f"ID: {order.id}, Город: {order.city}, Статус: {order.status.value}\n"
+            msg += f"ID: {order.id}, Город: {order.city}, Статус: {order.status.value}, driver: {order.driver_id}\n"
 
 
         await message.answer(msg)
@@ -251,11 +254,20 @@ async def take_order_callback(callback_query: types.CallbackQuery):
         await callback_query.answer(f"Вы успешно взяли заказ {order_id}.", show_alert=True)
         await callback_query.bot.send_message(
             callback_query.from_user.id,
-            f"Пассажир: {res.passenger_info}. Телефон: {res.passenger_phone}"
+            f"Связь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
         )
         await callback_query.message.edit_reply_markup()  # Убираем кнопки после успешного
 
-
+@router_message.callback_query(lambda c: c.data.startswith("cancel_"))
+async def cancel_order_callback(callback_query: types.CallbackQuery):
+    order_id = int(callback_query.data.split("_")[1])
+    print("Order ID to cancel:", order_id)
+    await callback_query.answer(f"Вы отменили заказ {order_id}.", show_alert=True)
+    await update_order(order_id, status=OrderStatus.NEW, driver_id=None)
+    order = await get_order_by_id(order_id)
+    await broadcast_order(bot, order)
+    await callback_query.bot.send_message(callback_query.from_user.id,"Заказ опубликован и разослан водителям!")
+    
 
 @router_message.message(Get_Photos.drive_ud)
 async def order_city(message: types.Message, state: FSMContext):
