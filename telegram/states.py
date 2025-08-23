@@ -12,3 +12,10 @@ class OrderForm(StatesGroup):
     mode = State()
     comments = State()
     passenger_info = State()
+
+
+class Get_Photos(StatesGroup):
+    drive_ud = State()
+    selfie = State()
+    car_photos = State()
+    sts = State()

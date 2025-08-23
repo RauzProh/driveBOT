@@ -10,6 +10,25 @@ kb_get_number = ReplyKeyboardMarkup(
         one_time_keyboard=True
     )
 
+choice_region = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Краснодарский край")],
+            [KeyboardButton(text="Ставропольский край")],
+            [KeyboardButton(text="Крым")]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+
+
+admin_panel = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Новый заказ")], [KeyboardButton(text="Управлять заказами")]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+
 
 
 ikb_admin_choice = InlineKeyboardMarkup(

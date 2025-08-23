@@ -67,3 +67,59 @@ async def take_order(order_id: int, tg_driver_id: int) -> Order | bool:
             return order
 
         return False  # заказ уже занят
+    
+async def complete_order(order_id: int):
+    async with SessionLocal() as session:
+        stmt = select(Order).where(Order.id == order_id).with_for_update()
+        res = await session.execute(stmt)
+        order = res.scalar_one_or_none()
+
+        if not order:
+            return False  # заказ не найден
+
+        if order.status == OrderStatus.IN_PROGRESS:
+            order.status = OrderStatus.DONE
+            if order.driver:
+                order.driver.completed_orders += 1
+            await session.commit()
+            await session.refresh(order)
+            return order  # возвращаем обновлённый объект
+
+        return False  # заказ не в прогрессе, нельзя завершить
+    
+async def cancel_order(order_id: int):
+    async with SessionLocal() as session:
+        stmt = select(Order).where(Order.id == order_id).with_for_update()
+        res = await session.execute(stmt)
+        order = res.scalar_one_or_none()
+
+        if not order:
+            return False  # заказ не найден
+
+        if order.status in [OrderStatus.NEW, OrderStatus.IN_PROGRESS]:
+            order.status = OrderStatus.CANCELED
+            await session.commit()
+            await session.refresh(order)
+            return order  # возвращаем обновлённый объект
+
+        return False  # заказ нельзя отменить
+    
+async def set_driver_availability(tg_id: int, availability: Availability):
+    async with SessionLocal() as session:
+        stmt = select(User).where(User.tg_id == tg_id).with_for_update()
+        res = await session.execute(stmt)
+        user = res.scalar_one_or_none()
+
+        if not user or user.role != Role.DRIVER:
+            return False  # пользователь не найден или не водитель
+
+        user.availability = availability
+        await session.commit()
+        await session.refresh(user)
+        return user  # возвращаем обновлённый объект
+    
+async def get_actual_orders_for_admin() -> list[Order]:
+    async with SessionLocal() as session:
+        stmt = select(Order).where(Order.status.in_([OrderStatus.NEW, OrderStatus.IN_PROGRESS]))
+        res = await session.execute(stmt)
+        return res.scalars().all()

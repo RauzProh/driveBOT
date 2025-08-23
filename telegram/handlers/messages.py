@@ -3,11 +3,14 @@ import asyncio
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 
-from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approve
+from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approve,choice_region
 
 from db.models.user import Role, Status, User
 from db.crud.user import create_user, get_user_by_tg_id, update_user
-from db.core import get_admins, take_order
+from db.core import get_admins, take_order, get_actual_orders_for_admin
+from db.models.order import Order, OrderStatus, OrderMode
+from telegram.states import OrderForm, Get_Photos
+from telegram.texts import reg_finish
 
 from aiogram import Router
 
@@ -56,6 +59,7 @@ async def send_to_admin(message: types.Message, media, admin: User):
 
 @router_message.message()
 async def messages(message: types.Message, state: FSMContext):
+    
     tg_id = message.from_user.id
     user = await get_user_by_tg_id(tg_id)
     if not user:
@@ -70,7 +74,31 @@ async def messages(message: types.Message, state: FSMContext):
 
     print(res.__dict__)
 
+    if message.text == 'Новый заказ' and res.role == Role.ADMIN:
+        tg_id = message.from_user.id
+        user = await get_user_by_tg_id(tg_id)
+        if not user or user.role != Role.ADMIN:
+            await message.answer("Доступ запрещён")
+            return
 
+        await state.set_state(OrderForm.city)
+        await message.answer("Введите город заказа:")
+        return
+    
+    if message.text == 'Управлять заказами' and res.role == Role.ADMIN:
+        from_db_orders = await get_actual_orders_for_admin()
+
+        if not from_db_orders:
+            await message.answer("Нет актуальных заказов.")
+            return
+
+        msg = "Актуальные заказы:\n"
+        for order in from_db_orders:
+            msg += f"ID: {order.id}, Город: {order.city}, Статус: {order.status.value}\n"
+
+
+        await message.answer(msg)
+        return
     if res.phone is None:
         if message.contact:
             phone_number = message.contact.phone_number
@@ -92,8 +120,12 @@ async def messages(message: types.Message, state: FSMContext):
 
             else:
                 await message.answer(
-                    f"{message.from_user.first_name}, добро пожаловать в бот регистрации водителя!"
+                    f"{message.from_user.first_name}, добро пожаловать в бот регистрации водителя ELITE TRANSFER!"
                 )
+                await message.answer("""
+Этот бот позволит Вам начать работу в сервисе. Регистрация займёт 5 минут. 
+
+Мы гарантируем конфиденциальность представленных данных и обязуемся не использовать их ни для каких целей, кроме рассмотрения вас для работы в сервисе.""")
                 await message.answer(
                     "Для начала работы, пожалуйста, отправьте свой номер телефона.",
                     reply_markup=kb_get_number
@@ -106,11 +138,14 @@ async def messages(message: types.Message, state: FSMContext):
         if is_valid_full_name(message.text):
             await message.answer(f"Ваше ФИО {message.text} успешно получено.")
             await update_user(message.from_user.id, full_name=message.text)
-            await message.answer("Теперь, пожалуйста, отправьте город, в котором вы обычно работаете.")
+            await message.answer("Теперь, пожалуйста, отправьте регион, в котором вы обычно работаете.", reply_markup=choice_region)
         else:
             await message.answer("Пожалуйста, отправьте корректное ФИО (только буквы, пробелы и дефисы).")
         return
     if res.city is None:
+        if message.text not in ["Краснодарский край", "Ставропольский край", "Крым"]:
+            await message.answer("Пожалуйста, выберите регион из предложенных кнопок.")
+            return
         await message.answer(f"Ваш город {message.text} успешно получен.")
         await update_user(message.from_user.id, city=message.text)
         await message.answer("Теперь, пожалуйста, отправьте марку и модель вашего авто.")
@@ -129,6 +164,7 @@ async def messages(message: types.Message, state: FSMContext):
         await message.answer(f"Гос. номер авто {message.text} успешно получен.")
         await update_user(message.from_user.id, car_number=message.text)
         await message.answer("Теперь, пожалуйста, отправьте фото вашего авто.")
+        # await state.set_state()
         return
     if res.car_photo is None:
         if message.photo:
@@ -152,8 +188,7 @@ async def messages(message: types.Message, state: FSMContext):
             await message.bot.download_file(file_path, destination)
             await update_user(message.from_user.id, documents=destination, status=Status.PENDING)
             await message.answer("Фото документов успешно получено.")
-            await message.answer("Спасибо! Ваша заявка на регистрацию отправлена на рассмотрение.")
-            await message.answer("Ожидайте одобрения от администрации.")
+            await message.answer(reg_finish)
             admins = await get_admins()
             print(admins)
             user = await get_user_by_tg_id(message.from_user.id)

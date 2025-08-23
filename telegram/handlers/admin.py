@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram import Router
 
 from telegram.states import OrderForm
-from telegram.keyboards import kb_get_number, build_order_buttons
+from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel
 from telegram.bot import bot
 
 from db.crud.user import get_user_by_tg_id, create_user, update_user
@@ -40,7 +40,7 @@ async def admin_command(message: types.Message):
     tg_id = message.from_user.id
     user = await get_user_by_tg_id(tg_id)
     if user and user.role == Role.ADMIN:
-        await message.answer("Вы уже администратор.")
+        await message.answer("Админ-панель", reply_markup=admin_panel)
 
 
 @router_admin.callback_query(lambda c: c.data.startswith("approve_"))
