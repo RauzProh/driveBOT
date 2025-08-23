@@ -47,8 +47,9 @@ async def admin_command(message: types.Message):
 async def accept_user_callback(callback_query: types.CallbackQuery):
     tg_id = int(callback_query.data.split("_")[1])
     user = await get_user_by_tg_id(tg_id)
-    if user and user.role != Role.ADMIN:
+    if user:
         await update_user(tg_id, status=Status.APPROVED)
+        await callback_query.bot.send_message(tg_id, "Ваша регистрация одобрена! Теперь вы можете использовать бота.")
         await callback_query.message.edit_reply_markup()
 
 
