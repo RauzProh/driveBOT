@@ -22,5 +22,5 @@ __pycache__/
 # Системные файлы
 .DS_Store
 Thumbs.db
-
+downloads/
 test.py
