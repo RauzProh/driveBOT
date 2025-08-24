@@ -84,3 +84,14 @@ def build_order_buttons(order: Order) -> InlineKeyboardMarkup:
         buttons.append([InlineKeyboardButton(text="Сделать ставку", callback_data=f"bid_{order.id}")])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def generate_ikb_order_push(order_id, driver_id):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Отдать заказ", callback_data=f"orderpush_{order_id}_{driver_id}"),
+            ],
+
+        ]
+    )

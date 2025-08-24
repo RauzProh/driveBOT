@@ -19,3 +19,7 @@ class Get_Photos(StatesGroup):
     selfie = State()
     car_photos = State()
     sts = State()
+
+class AuctionBid(StatesGroup):
+    commments = State()
+    bid_amount = State()

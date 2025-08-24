@@ -1,8 +1,10 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 
 from db.session import SessionLocal
 from db.models.user import User, Role, Status, Availability
 from db.models.order import Order, OrderStatus, OrderMode
+from db.models.bid import Bid
+from db.crud.bid import create_bid
 
 
 
@@ -67,6 +69,71 @@ async def take_order(order_id: int, tg_driver_id: int) -> Order | bool:
             return order
 
         return False  # заказ уже занят
+
+async def get_max_bid_obj(order_id: int) -> Bid | None:
+    async with SessionLocal() as session:
+        stmt = (
+            select(Bid)
+            .where(Bid.order_id == order_id)
+            .order_by(Bid.price.desc(), Bid.created_at.asc())  # сортировка: сначала по цене, потом по времени
+        )
+        result = await session.execute(stmt)
+        bid = result.scalars().first()  # берём первую запись — максимальная цена
+        return bid
+
+async def get_max_bid(order_id):
+    async with SessionLocal() as session:
+        stmt = select(func.max(Bid.price)).where(Bid.order_id == order_id)
+        res = await session.execute(stmt)
+        return res.scalar()
+    
+async def get_all_bids_except_max(order_id: int) -> list[Bid]:
+    async with SessionLocal() as session:
+        # Сначала находим максимальную цену
+        max_price_stmt = select(func.max(Bid.price)).where(Bid.order_id == order_id)
+        max_price_res = await session.execute(max_price_stmt)
+        max_price = max_price_res.scalar()
+
+        if max_price is None:
+            return []  # нет ставок
+
+        # Выбираем все ставки кроме максимальной
+        stmt = select(Bid).where(Bid.order_id == order_id, Bid.price < max_price)
+        result = await session.execute(stmt)
+        bids = result.scalars().all()
+        return bids
+
+async def bid_order(order_id: int, bid_amount: float) -> Order | OrderStatus | bool:
+    async with SessionLocal() as session:
+        stmt = select(Order).where(Order.id == order_id).with_for_update()
+        res = await session.execute(stmt)
+        order = res.scalar_one_or_none()
+
+        print(order)
+        if not order:
+            return False  # заказ не найден
+        print(order.status)
+        print(order.mode)
+        if order.mode == OrderMode.AUCTION and order.status == OrderStatus.NEW:
+            max_bid = await get_max_bid(order.id)
+            print(max_bid)
+            if max_bid:
+                if bid_amount <= max_bid:
+                    return order.status
+                
+                else:
+                    print('подходит ставка')
+                    return True
+
+            else:
+                print('подходит ставка')
+                return True  # возвращаем обновлённый объект
+            
+        if order.status != OrderStatus.NEW:
+            return order.status
+        return False  # заказ не в режиме аукциона или не новый
+    
+
     
 async def complete_order(order_id: int):
     async with SessionLocal() as session:

@@ -9,6 +9,11 @@ async def get_user_by_tg_id(tg_id: int) -> User | None:
         res = await session.execute(select(User).where(User.tg_id == tg_id))
         return res.scalar_one_or_none()
 
+async def get_user_by_id(db_id: int) -> User | None:
+    async with SessionLocal() as session:
+        res = await session.execute(select(User).where(User.id == db_id))
+        return res.scalar_one_or_none()
+
 # Создать нового пользователя
 async def create_user(
     tg_id: int,

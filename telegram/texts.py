@@ -1,5 +1,6 @@
 
 from db.models.user import User
+from db.models.order import Order
 
 reg_finish = "Все шаги регистрации пройдены. Отлично! Мы рассматриваем заявки в течении 2-х рабочих дней. \
 Вам придёт уведомление и вы сможете принимать заявки. Хорошего дня !"
@@ -23,3 +24,20 @@ Telegram ID: {user.tg_id}\n\
 
 
 
+def generate_text_drive_info(user: User) -> str:
+    text = f"Водитель {user.full_name} {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
+    return text
+
+def generate_drive_info(user: User) -> str:
+    text = f"Водитель {user.full_name} {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
+    return text
+
+def generate_auction_win_order(order: Order):
+    text =f"Вы выиграли в аукционе на заказ {order.id}." 
+    text+=f"🕐 Время: {order.scheduled_time}\n"
+    text+=f"🚖 Класс авто: {order.car_class}\n"
+    text+=f"⛳ {order.from_address} → {order.to_address}\n"
+    text+=f"💬 Комментарии: {order.comments or 'нет'}\n"
+    text+=f"💰 Стоимость: {order.price}\n"
+    text+=f"Связь с пассажиром: {order.passenger_info}"
+    return text

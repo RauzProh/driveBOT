@@ -10,10 +10,12 @@ from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel, 
 from telegram.bot import bot
 
 from db.crud.user import get_user_by_tg_id, create_user, update_user
-from db.crud.order import create_order
+from db.crud.order import create_order, get_bid_by_driver_id,update_order, get_order_by_id
 from db.models.user import Role, Status
 from db.models.order import Order, OrderStatus, OrderMode
 from db.core import get_drivers_for_order
+
+from telegram.texts import generate_auction_win_order
 
 router_admin = Router()
 
@@ -42,6 +44,28 @@ async def admin_command(message: types.Message):
     user = await get_user_by_tg_id(tg_id)
     if user and user.role == Role.ADMIN:
         await message.answer("Админ-панель", reply_markup=admin_panel)
+
+@router_admin.callback_query(lambda c: c.data.startswith("orderpush_"))
+async def push_order(callback_query: types.CallbackQuery):
+    print("Попал")
+    print(callback_query.data)
+     # Сплитим строку
+    parts = callback_query.data.split("_")  # ["orderpush", "123", "456"]
+
+    # Получаем числа
+    order_id = int(parts[1])
+    driver_id = int(parts[2])
+    user = await get_user_by_tg_id(driver_id)
+
+    getbid = await get_bid_by_driver_id(order_id, user.id)
+    await update_order(order_id, price=getbid.price, driver_id=user.id, status= OrderStatus.IN_PROGRESS)
+    
+    await callback_query.message.edit_reply_markup()
+    await callback_query.answer("Заказ отдан")
+    order = await get_order_by_id(order_id)
+    await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
+    
+    
 
 
 @router_admin.callback_query(lambda c: c.data.startswith("approve_"))

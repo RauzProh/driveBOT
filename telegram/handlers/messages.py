@@ -7,11 +7,11 @@ from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approv
 
 from db.models.user import Role, Status, User
 from db.crud.user import create_user, get_user_by_tg_id, update_user
-from db.crud.order import create_order, get_order_by_id, update_order
-from db.core import get_admins, take_order, get_actual_orders_for_admin
+from db.crud.order import create_order, get_order_by_id, update_order, get_bid_by_driver_id
+from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin
 from db.models.order import Order, OrderStatus, OrderMode
-from telegram.states import OrderForm, Get_Photos
-from telegram.texts import reg_finish,text_get_car_photos,generate_text_new_reg_user
+from telegram.states import OrderForm, Get_Photos, AuctionBid
+from telegram.texts import reg_finish,text_get_car_photos,generate_text_new_reg_user, generate_text_drive_info
 from telegram.bot import bot
 from telegram.handlers.admin import broadcast_order
 
@@ -169,46 +169,46 @@ async def messages(message: types.Message, state: FSMContext):
         await message.answer("📷  Сфотографируйте ваше водительское удостоверение с обеих сторон и отправьте в чат. ")
         await state.set_state(Get_Photos.drive_ud)
         return
-    if res.car_photo is None:
-        if message.photo:
-            photo = message.photo[-1]
-            file_info = await message.bot.get_file(photo.file_id)
-            file_path = file_info.file_path
-            destination = f"downloads/{photo.file_id}.jpg"
-            await message.bot.download_file(file_path, destination)
-            await update_user(message.from_user.id, car_photo=destination)
-            await message.answer("Фото авто успешно получено.")
-            await message.answer("Теперь, пожалуйста, отправьте фото ваших документов.")
-        else:
-            await message.answer("Пожалуйста, отправьте фото вашего авто.")
-        return
-    if res.documents is None:
-        if message.photo:
-            photo = message.photo[-1]
-            file_info = await message.bot.get_file(photo.file_id)
-            file_path = file_info.file_path
-            destination = f"downloads/{photo.file_id}.jpg"
-            await message.bot.download_file(file_path, destination)
-            await update_user(message.from_user.id, documents=destination, status=Status.PENDING)
-            await message.answer("Фото документов успешно получено.")
-            await message.answer(reg_finish)
-            admins = await get_admins()
-            print(admins)
-            user = await get_user_by_tg_id(message.from_user.id)
-            media = [ types.InputMediaPhoto(media=types.FSInputFile(user.car_photo), caption=f"Новый пользователь {message.from_user.id} ожидает подтверждения.") , types.InputMediaPhoto(media=types.FSInputFile(user.documents)) ]
-            # Параллельная рассылка
-            tasks = []
+    # if res.car_photo is None:
+    #     if message.photo:
+    #         photo = message.photo[-1]
+    #         file_info = await message.bot.get_file(photo.file_id)
+    #         file_path = file_info.file_path
+    #         destination = f"downloads/{photo.file_id}.jpg"
+    #         await message.bot.download_file(file_path, destination)
+    #         await update_user(message.from_user.id, car_photo=destination)
+    #         await message.answer("Фото авто успешно получено.")
+    #         await message.answer("Теперь, пожалуйста, отправьте фото ваших документов.")
+    #     else:
+    #         await message.answer("Пожалуйста, отправьте фото вашего авто.")
+    #     return
+    # if res.documents is None:
+    #     if message.photo:
+    #         photo = message.photo[-1]
+    #         file_info = await message.bot.get_file(photo.file_id)
+    #         file_path = file_info.file_path
+    #         destination = f"downloads/{photo.file_id}.jpg"
+    #         await message.bot.download_file(file_path, destination)
+    #         await update_user(message.from_user.id, documents=destination, status=Status.PENDING)
+    #         await message.answer("Фото документов успешно получено.")
+    #         await message.answer(reg_finish)
+    #         admins = await get_admins()
+    #         print(admins)
+    #         user = await get_user_by_tg_id(message.from_user.id)
+    #         media = [ types.InputMediaPhoto(media=types.FSInputFile(user.car_photo), caption=f"Новый пользователь {message.from_user.id} ожидает подтверждения.") , types.InputMediaPhoto(media=types.FSInputFile(user.documents)) ]
+    #         # Параллельная рассылка
+    #         tasks = []
 
-            for admin in admins:
-                # 1. Отправляем альбом
-                tasks.append(send_to_admin(message, media, admin))
+    #         for admin in admins:
+    #             # 1. Отправляем альбом
+    #             tasks.append(send_to_admin(message, media, admin))
 
-            # Выполняем параллельно все задачи
-            await asyncio.gather(*tasks, return_exceptions=True)
-        else:
-            await message.answer("Пожалуйста, отправьте фото ваших документов.")
-        return
-    print(res.status)
+    #         # Выполняем параллельно все задачи
+    #         await asyncio.gather(*tasks, return_exceptions=True)
+    #     else:
+    #         await message.answer("Пожалуйста, отправьте фото ваших документов.")
+    #     return
+    # print(res.status)
     if res.status == Status.PENDING or res.status == Status.REGISTRATION:
         # await update_user(message.from_user.id, status="PENDING")
         await message.answer("Ваша регистрация уже завершена и находится на рассмотрении.")
@@ -240,6 +240,16 @@ async def messages(message: types.Message, state: FSMContext):
 
 
 
+async def send_take_order_to_admin(admin: User, callback_query: types.CallbackQuery, order_id):
+    await callback_query.bot.send_message(
+                admin.tg_id,
+                f"Заказ {order_id} взят водителем {callback_query.from_user.id}.",
+            )
+    user = await get_user_by_tg_id(callback_query.from_user.id)
+    text = generate_text_drive_info(user)
+    await callback_query.bot.send_message(admin.tg_id, text)
+
+
 
 
 @router_message.callback_query(lambda c: c.data.startswith("take_"))
@@ -257,6 +267,66 @@ async def take_order_callback(callback_query: types.CallbackQuery):
             f"Связь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
         )
         await callback_query.message.edit_reply_markup()  # Убираем кнопки после успешного
+        admins = await get_admins()
+        tasks = []
+        for admin in admins:
+            tasks.append(send_take_order_to_admin(admin, callback_query, order_id))
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+
+# async def send_get_order_toAdmins(callback_query: types.CallbackQuery, admin: User, order_id, text):
+#      callback_query.bot.send_message(
+#                 admin.tg_id,
+#                 f"Заказ {order_id} взят водителем {callback_query.from_user.id}.",
+#             )
+     
+
+@router_message.callback_query(lambda c: c.data.startswith("bid_"))
+async def bid_order_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    order_id = int(callback_query.data.split("_")[1])
+    print("Order ID:", order_id)
+    print(callback_query.from_user.id)
+    await state.update_data(order_id=order_id)
+
+    await callback_query.answer(f"Введите вашу ставку для заказа {order_id}: например, 1500", show_alert=True)
+    await state.set_state(AuctionBid.bid_amount)
+    
+# @router_message.message(AuctionBid.bid_amount)
+# async def process_bid_amount(message: types.Message, state: FSMContext):
+#     data = await state.get_data()
+#     order_id = data.get("order_id")
+#     try:
+#         bid_amount = float(message.text)
+#         if bid_amount <= 0:
+#             raise ValueError("Ставка должна быть положительным числом.")
+#     except ValueError:
+#         await message.answer("Пожалуйста, введите корректную сумму ставки (положительное число).")
+#         return
+
+#     res = await bid_order(order_id, bid_amount, message.from_user.id)
+#     if res == OrderStatus.IN_PROGRESS:
+#         await message.answer(f"Извините, заказ {order_id} уже взят другим водителем.")
+    
+
+
+#     if res == OrderStatus.NEW:
+#         await message.answer(f"Ваша ставка для заказа {order_id} слишком низкая.")
+#     if res == True :
+#         await message.answer(f"Вы успешно сделали ставку {bid_amount} для заказа {order_id}. Ожидайте результатов аукциона.")
+#         admins = await get_admins()
+#         tasks = []
+#         for admin in admins:
+#             tasks.append(message.bot.send_message(
+#                 admin.tg_id,
+#                 f"Новая ставка {bid_amount} для заказа {order_id} от водителя {message.from_user.id}.",
+#             ))
+#         await asyncio.gather(*tasks, return_exceptions=True)
+#     await state.clear()
+
+
+
+
+
 
 @router_message.callback_query(lambda c: c.data.startswith("cancel_"))
 async def cancel_order_callback(callback_query: types.CallbackQuery):
