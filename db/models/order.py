@@ -26,6 +26,7 @@ class Order(Base):
     car_class: Mapped[str] = mapped_column(String(50), nullable=False)  # эко/комфорт/бизнес
     price: Mapped[float] = mapped_column(DECIMAL(10,2), default=None)
     mode: Mapped[OrderMode] = mapped_column(Enum(OrderMode), default=OrderMode.FCFS)
+    trip_number: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     comments: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     passenger_info: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.NEW)

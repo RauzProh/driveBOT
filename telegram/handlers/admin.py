@@ -15,7 +15,7 @@ from db.models.user import Role, Status
 from db.models.order import Order, OrderStatus, OrderMode
 from db.core import get_drivers_for_order
 
-from telegram.texts import generate_auction_win_order
+from telegram.texts import generate_auction_win_order, reg_text
 
 router_admin = Router()
 
@@ -25,12 +25,13 @@ async def broadcast_order(bot, order: Order):
     for driver in drivers:
         await bot.send_message(
             driver.tg_id,
-            f"❗ Новый заказ №{order.id}:\n"
+            f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
             f"🕐 Время: {order.scheduled_time}\n"
             f"🚖 Класс авто: {order.car_class}\n"
             f"⛳ {order.from_address} → {order.to_address}\n"
+            f"✈️ Номер рейса: {order.trip_number}\n"
             f"💬 Комментарии: {order.comments or 'нет'}\n"
-            f"💰 Стоимость: {order.price if order.price else 'Аукцион'}",
+            f"{"💰 Стоимость:" +order.price if order.price else ''}",
             reply_markup=build_order_buttons(order)
         )
 
@@ -75,6 +76,7 @@ async def accept_user_callback(callback_query: types.CallbackQuery):
     if user:
         await update_user(tg_id, status=Status.APPROVED)
         await callback_query.bot.send_message(tg_id, "Ваша регистрация одобрена! Теперь вы можете использовать бота.")
+        await callback_query.bot.send_message(tg_id, reg_text)
         await callback_query.message.edit_reply_markup()
 
 
@@ -160,6 +162,16 @@ async def order_mode(message: types.Message, state: FSMContext):
         await message.answer("Неверный режим. Введите FCFS или AUCTION.")
         return
     await state.update_data(mode=OrderMode.FCFS if mode_text == "fcfs" else OrderMode.AUCTION)
+    await state.set_state(OrderForm.trip_number)
+    await message.answer("Номер рейса: ")
+
+
+@router_admin.message(OrderForm.trip_number)
+async def order_mode(message: types.Message, state: FSMContext):
+    mode_text = message.text
+    await state.update_data(trip_number=mode_text)
+
+
     await state.set_state(OrderForm.comments)
     await message.answer("Комментарии к заказу (опционально):")
 
@@ -184,6 +196,7 @@ async def finish_order(message: types.Message, state: FSMContext):
         car_class=data['car_class'],
         price=data.get('price'),
         mode=data['mode'],
+        trip_number=data['trip_number'],
         comments=data.get('comments'),
         passenger_info=data.get('passenger_info'),
         status=OrderStatus.NEW

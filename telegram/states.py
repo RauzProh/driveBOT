@@ -10,6 +10,7 @@ class OrderForm(StatesGroup):
     car_class = State()
     price = State()
     mode = State()
+    trip_number = State()
     comments = State()
     passenger_info = State()
 
