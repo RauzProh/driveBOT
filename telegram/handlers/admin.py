@@ -31,7 +31,7 @@ async def broadcast_order(bot, order: Order):
             f"⛳ {order.from_address} → {order.to_address}\n"
             f"✈️ Номер рейса: {order.trip_number}\n"
             f"💬 Комментарии: {order.comments or 'нет'}\n"
-            f"{"💰 Стоимость:" +order.price if order.price else ''}",
+            f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
             reply_markup=build_order_buttons(order)
         )
 
