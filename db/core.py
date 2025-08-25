@@ -70,35 +70,35 @@ async def take_order(order_id: int, tg_driver_id: int) -> Order | bool:
 
         return False  # заказ уже занят
 
-async def get_max_bid_obj(order_id: int) -> Bid | None:
+async def get_min_bid_obj(order_id: int) -> Bid | None:
     async with SessionLocal() as session:
         stmt = (
             select(Bid)
             .where(Bid.order_id == order_id)
-            .order_by(Bid.price.desc(), Bid.created_at.asc())  # сортировка: сначала по цене, потом по времени
+            .order_by(Bid.price.asc(), Bid.created_at.asc())  # сортировка: сначала минимальная цена, потом по времени
         )
         result = await session.execute(stmt)
-        bid = result.scalars().first()  # берём первую запись — максимальная цена
+        bid = result.scalars().first()  # берём первую запись — минимальная цена
         return bid
 
-async def get_max_bid(order_id):
+async def get_min_bid(order_id):
     async with SessionLocal() as session:
-        stmt = select(func.max(Bid.price)).where(Bid.order_id == order_id)
+        stmt = select(func.min(Bid.price)).where(Bid.order_id == order_id)
         res = await session.execute(stmt)
         return res.scalar()
     
-async def get_all_bids_except_max(order_id: int) -> list[Bid]:
+async def get_all_bids_except_min(order_id: int) -> list[Bid]:
     async with SessionLocal() as session:
         # Сначала находим максимальную цену
-        max_price_stmt = select(func.max(Bid.price)).where(Bid.order_id == order_id)
-        max_price_res = await session.execute(max_price_stmt)
-        max_price = max_price_res.scalar()
+        min_price_stmt = select(func.min(Bid.price)).where(Bid.order_id == order_id)
+        min_price_res = await session.execute(min_price_stmt)
+        min_price = min_price_res.scalar()
 
-        if max_price is None:
+        if min_price is None:
             return []  # нет ставок
 
         # Выбираем все ставки кроме максимальной
-        stmt = select(Bid).where(Bid.order_id == order_id, Bid.price < max_price)
+        stmt = select(Bid).where(Bid.order_id == order_id, Bid.price > min_price)
         result = await session.execute(stmt)
         bids = result.scalars().all()
         return bids
@@ -115,10 +115,10 @@ async def bid_order(order_id: int, bid_amount: float) -> Order | OrderStatus | b
         print(order.status)
         print(order.mode)
         if order.mode == OrderMode.AUCTION and order.status == OrderStatus.NEW:
-            max_bid = await get_max_bid(order.id)
-            print(max_bid)
-            if max_bid:
-                if bid_amount <= max_bid:
+            min_bid = await get_min_bid(order.id)
+            print(min_bid)
+            if min_bid:
+                if bid_amount >= min_bid:
                     return order.status
                 
                 else:

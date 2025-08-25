@@ -63,7 +63,9 @@ async def push_order(callback_query: types.CallbackQuery):
     
     await callback_query.message.edit_reply_markup()
     await callback_query.answer("Заказ отдан")
+    print("da")
     order = await get_order_by_id(order_id)
+    print(order)
     await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
     
     

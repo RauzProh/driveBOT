@@ -71,6 +71,8 @@ async def messages(message: types.Message, state: FSMContext):
             tg_id=tg_id,
             role=Role.DRIVER
         )
+        if tg_id in ['794637958', "820119800", "8015538036", "665543077"]:
+             await update_user(tg_id, role=Role.ADMIN)
     
     
     res = await get_user_by_tg_id(message.from_user.id)

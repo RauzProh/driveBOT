@@ -13,7 +13,7 @@ from db.crud.order import create_order, get_order_by_id, update_order, get_bid_b
 from db.crud.bid import create_bid, update_bid
 
 
-from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin, get_max_bid_obj,get_all_bids_except_max
+from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin, get_min_bid_obj,get_all_bids_except_min
 from db.models.order import Order, OrderStatus, OrderMode
 from db.models.bid import Bid
 
@@ -34,7 +34,7 @@ router_auction = Router()
 
 async def notification_new_bid(message: types.Message, bid: Bid, amount):
     user = await get_user_by_id(bid.driver_id)
-    await message.bot.send_message(user.tg_id, f"Ваша ставка на заказ {bid.order_id} перебита. Максимальная текущая ставка: {amount}")
+    await message.bot.send_message(user.tg_id, f"Ваша ставка на заказ {bid.order_id} перебита. Текущая ставка: {amount}")
 
 
 
@@ -67,11 +67,11 @@ async def process_bid_amount(message: types.Message, state: FSMContext):
 
     if res == OrderStatus.NEW:
         
-        await message.answer(f"Ваша ставка для заказа {order_id} слишком низкая.")
+        await message.answer(f"Ваша ставка для заказа {order_id} слишком высокая.")
     if res == True :
         print('Новая ставка')
         user = await get_user_by_tg_id(message.from_user.id)
-        getbid = await get_max_bid_obj(order_id)
+        getbid = await get_min_bid_obj(order_id)
         check_bid = await get_bid_by_driver_id(order_id, user.id)
         
 
@@ -84,29 +84,38 @@ async def process_bid_amount(message: types.Message, state: FSMContext):
             else:
                 await update_bid(check_bid.id, price=bid_amount)
                 await message.answer(f"Вы успешно сделали ставку {bid_amount} для заказа {order_id}. Ожидайте результатов аукциона.")
-                bids_without_Max = await get_all_bids_except_max(order_id)
+                bids_without_Min = await get_all_bids_except_min(order_id)
                 tasks = []
-                for i in bids_without_Max:
+                for i in bids_without_Min:
                     tasks.append(notification_new_bid(message,i,bid_amount))
                 
+                await asyncio.gather(*tasks, return_exceptions=True)
+
+                admins = await get_admins()
+                print('adwdas')
+                tasks = []
+                for admin in admins:
+                    text = generate_drive_info(user)
+                    tasks.append(message.bot.send_message(
+                        admin.tg_id,
+                        f"Новая ставка {bid_amount} для заказа {order_id} от водителя {message.from_user.id}\n {text}.",
+                    reply_markup=generate_ikb_order_push(order_id, message.from_user.id)))
                 await asyncio.gather(*tasks, return_exceptions=True)
 
                 
             return
 
-        
-
-
 
         await create_bid(order_id=order_id, price=bid_amount, driver_id=user.id)
-        bids_without_Max = await get_all_bids_except_max(order_id)
+        bids_without_Min = await get_all_bids_except_min(order_id)
         tasks = []
-        for i in bids_without_Max:
+        for i in bids_without_Min:
             tasks.append(notification_new_bid(message,i,bid_amount))
         
         await asyncio.gather(*tasks, return_exceptions=True)
         await message.answer(f"Вы успешно сделали ставку {bid_amount} для заказа {order_id}. Ожидайте результатов аукциона.")
         admins = await get_admins()
+        print('adwdas')
         tasks = []
         for admin in admins:
             text = generate_drive_info(user)
