@@ -6,24 +6,30 @@ from aiogram.filters import CommandStart, Command
 from aiogram import Router
 
 from telegram.states import OrderForm
-from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel, choice_region, choice_order_mod
+from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel, choice_region, choice_order_mod, build_order_admins_buttons
 from telegram.bot import bot
 
-from db.crud.user import get_user_by_tg_id, create_user, update_user
+from db.crud.user import get_user_by_tg_id, create_user, update_user, get_user_by_id
 from db.crud.order import create_order, get_bid_by_driver_id,update_order, get_order_by_id
+from db.crud.order_messages import get_order_messages, delete_order_message
 from db.models.user import Role, Status
 from db.models.order import Order, OrderStatus, OrderMode
 from db.core import get_drivers_for_order
 
 from telegram.texts import generate_auction_win_order, reg_text
 
+from db.crud.order_messages import create_order_message
+
 router_admin = Router()
 
 
 async def broadcast_order(bot, order: Order):
     drivers = await get_drivers_for_order(order.city)
+    print("BROADCAST")
+    print(drivers)
     for driver in drivers:
-        await bot.send_message(
+        print('driver')
+        msg = await bot.send_message(
             driver.tg_id,
             f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
             f"🕐 Время: {order.scheduled_time}\n"
@@ -34,7 +40,7 @@ async def broadcast_order(bot, order: Order):
             f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
             reply_markup=build_order_buttons(order)
         )
-
+        await create_order_message(order.id, driver.tg_id, msg.message_id)
 
 
 
@@ -66,8 +72,16 @@ async def push_order(callback_query: types.CallbackQuery):
     print("da")
     order = await get_order_by_id(order_id)
     print(order)
-    await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
-    
+    msg = await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
+
+    order_messages = await get_order_messages(order.id)
+    for i in order_messages:
+        try:
+            await bot.delete_message(i.chat_id,i.message_id)
+            if i.chat_id==user.tg_id:
+                await create_order_message(order.id, i.chat_id, msg.message_id)
+        except:
+            pass
     
 
 
@@ -91,6 +105,23 @@ async def reject_user_callback(callback_query: types.CallbackQuery):
         await update_user(tg_id, status=Status.DECLINED)
         await callback_query.bot.send_message(tg_id, "Регистрация отклонена. Пожалуйста, свяжитесь с поддержкой.")
         await callback_query.message.edit_reply_markup()
+
+
+@router_admin.callback_query(lambda c: c.data.startswith("revoke_"))
+async def revoke_order(callback_query: types.CallbackQuery):
+    await callback_query.message.delete()
+    revoke_order_id = int(callback_query.data.split("_")[1])
+    order_messages = await get_order_messages(order.id)
+    order = await get_order_by_id(order_id=revoke_order_id)
+    for i in order_messages:
+            try:
+                await bot.delete_message(i.chat_id, i.message_id)
+                await delete_order_message(revoke_order_id, i.chat_id)
+            except Exception:
+                pass
+
+    user = await get_user_by_id(order.driver_id)
+    await callback_query.bot.send_message(user.tg_id, f"Заказ {order.id} анулирован")
 
 
 # ----------------- FSM Handlers -----------------
@@ -206,4 +237,14 @@ async def finish_order(message: types.Message, state: FSMContext):
 
     await broadcast_order(bot, order)
     await message.answer("Заказ опубликован и разослан водителям!")
+    msg = await message.answer(
+            f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
+            f"🕐 Время: {order.scheduled_time}\n"
+            f"🚖 Класс авто: {order.car_class}\n"
+            f"⛳ {order.from_address} → {order.to_address}\n"
+            f"✈️ Номер рейса: {order.trip_number}\n"
+            f"💬 Комментарии: {order.comments or 'нет'}\n"
+            f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
+            reply_markup=build_order_admins_buttons(order)
+        )
     await state.clear()

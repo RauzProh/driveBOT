@@ -8,6 +8,8 @@ from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approv
 from db.models.user import Role, Status, User
 from db.crud.user import create_user, get_user_by_tg_id, update_user
 from db.crud.order import create_order, get_order_by_id, update_order, get_bid_by_driver_id
+from db.crud.order_messages import get_order_messages, delete_order_message, get_order_message
+
 from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin
 from db.models.order import Order, OrderStatus, OrderMode
 from telegram.states import OrderForm, Get_Photos, AuctionBid
@@ -268,6 +270,16 @@ async def take_order_callback(callback_query: types.CallbackQuery):
             callback_query.from_user.id,
             f"Связь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
         )
+        order_messages = await get_order_messages(order_id)
+        for i in order_messages:
+            try:
+                if i.chat_id == callback_query.from_user.id:
+                     continue
+                await bot.delete_message(i.chat_id, i.message_id)
+                await delete_order_message(order_id, i.chat_id)
+            except Exception:
+                pass
+            
         await callback_query.message.edit_reply_markup()  # Убираем кнопки после успешного
         admins = await get_admins()
         tasks = []
@@ -333,12 +345,26 @@ async def bid_order_callback(callback_query: types.CallbackQuery, state: FSMCont
 @router_message.callback_query(lambda c: c.data.startswith("cancel_"))
 async def cancel_order_callback(callback_query: types.CallbackQuery):
     order_id = int(callback_query.data.split("_")[1])
-    print("Order ID to cancel:", order_id)
-    await callback_query.answer(f"Вы отменили заказ {order_id}.", show_alert=True)
-    await update_order(order_id, status=OrderStatus.NEW, driver_id=None)
     order = await get_order_by_id(order_id)
+    print("Order ID to cancel:", order_id)
+    # await callback_query.answer(f"Вы отменили заказ {order_id}.", show_alert=True)
+    await callback_query.message.delete()
+    order_message = await get_order_message(order.id, callback_query.from_user.id)
+    print("УДалить")
+    print(order_message.chat_id, order_message.message_id)
+    await bot.delete_message(order_message.chat_id, order_message.message_id)
+    await delete_order_message(order.id, order_message.chat_id)
+    await update_order(order_id, status=OrderStatus.NEW, driver_id=None)
     await broadcast_order(bot, order)
-    await callback_query.bot.send_message(callback_query.from_user.id,"Заказ опубликован и разослан водителям!")
+
+    admins = await get_admins()
+    tasks = []
+    for admin in admins:
+        tasks.append(send_take_order_to_admin(admin, callback_query, order_id))
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+    
+    # await callback_query.bot.send_message(callback_query.from_user.id,"Заказ опубликован и разослан водителям!")
     
 
 @router_message.message(Get_Photos.drive_ud)

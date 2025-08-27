@@ -13,7 +13,7 @@ from db.crud.order import create_order, get_order_by_id, update_order, get_bid_b
 from db.crud.bid import create_bid, update_bid
 
 
-from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin, get_min_bid_obj,get_all_bids_except_min
+from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin, get_min_bid_obj,get_all_bids_except_min, get_min_bid
 from db.models.order import Order, OrderStatus, OrderMode
 from db.models.bid import Bid
 
@@ -66,8 +66,9 @@ async def process_bid_amount(message: types.Message, state: FSMContext):
 
 
     if res == OrderStatus.NEW:
+        min_bid = await get_min_bid(order_id)
         
-        await message.answer(f"Ваша ставка для заказа {order_id} слишком высокая.")
+        await message.answer(f"Ваша ставка для заказа {order_id} слишком высокая. Текущая ставка {min_bid}")
     if res == True :
         print('Новая ставка')
         user = await get_user_by_tg_id(message.from_user.id)

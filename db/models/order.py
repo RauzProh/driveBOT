@@ -35,4 +35,5 @@ class Order(Base):
     driver: Mapped["User"] = relationship("User", back_populates="orders")
 
     bids: Mapped[list["Bid"]] = relationship("Bid", back_populates="order", cascade="all, delete-orphan")
+    messages = relationship("OrderMessage", back_populates="order", cascade="all, delete-orphan")
 

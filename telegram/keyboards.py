@@ -85,6 +85,15 @@ def build_order_buttons(order: Order) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
+def build_order_admins_buttons(order: Order) -> InlineKeyboardMarkup:
+    buttons = []
+    buttons.append([InlineKeyboardButton(text="Анулировать", callback_data=f"revoke_{order.id}")])
+    
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+
 
 def generate_ikb_order_push(order_id, driver_id):
     return InlineKeyboardMarkup(
