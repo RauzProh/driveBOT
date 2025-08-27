@@ -75,14 +75,14 @@ async def push_order(callback_query: types.CallbackQuery):
     msg = await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
 
     order_messages = await get_order_messages(order.id)
+    print(order_messages)
     for i in order_messages:
-        try:
-            await bot.delete_message(i.chat_id,i.message_id)
-            if i.chat_id==user.tg_id:
-                await create_order_message(order.id, i.chat_id, msg.message_id)
-        except:
-            pass
-    
+        print(i.chat_id,i.message_id)
+        await callback_query.bot.delete_message(i.chat_id,i.message_id)
+        await delete_order_message(order.id,i.chat_id )
+        if i.chat_id==user.tg_id:
+            await create_order_message(order.id, i.chat_id, msg.message_id)
+
 
 
 @router_admin.callback_query(lambda c: c.data.startswith("approve_"))
@@ -111,8 +111,8 @@ async def reject_user_callback(callback_query: types.CallbackQuery):
 async def revoke_order(callback_query: types.CallbackQuery):
     await callback_query.message.delete()
     revoke_order_id = int(callback_query.data.split("_")[1])
-    order_messages = await get_order_messages(order.id)
     order = await get_order_by_id(order_id=revoke_order_id)
+    order_messages = await get_order_messages(order.id)
     for i in order_messages:
             try:
                 await bot.delete_message(i.chat_id, i.message_id)
