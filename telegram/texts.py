@@ -25,11 +25,11 @@ Telegram ID: {user.tg_id}\n\
 
 
 def generate_text_drive_info(user: User) -> str:
-    text = f"Водитель {user.full_name} {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
+    text = f"Водитель [{user.full_name}](tg://user?id={user.tg_id}) {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
     return text
 
 def generate_drive_info(user: User) -> str:
-    text = f"Водитель {user.full_name} {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
+    text = f"Водитель [{user.full_name}](tg://user?id={user.tg_id}) {user.phone}, автомобиль {user.car_color} {user.car_brand} {user.car_number}"
     return text
 
 def generate_auction_win_order(order: Order):

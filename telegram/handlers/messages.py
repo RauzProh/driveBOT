@@ -251,9 +251,16 @@ async def send_take_order_to_admin(admin: User, callback_query: types.CallbackQu
             )
     user = await get_user_by_tg_id(callback_query.from_user.id)
     text = generate_text_drive_info(user)
-    await callback_query.bot.send_message(admin.tg_id, text)
+    await callback_query.bot.send_message(admin.tg_id, text, parse_mode="Markdown")
 
-
+async def send_cancel_order_to_admin(admin: User, callback_query: types.CallbackQuery, order_id):
+    user = await get_user_by_tg_id(callback_query.from_user.id)
+    await callback_query.bot.send_message(
+                admin.tg_id,
+                f"Заказ {order_id} отказан водителем {callback_query.from_user.id}.",
+            )
+    text = generate_text_drive_info(user)
+    await callback_query.bot.send_message(admin.tg_id, text, parse_mode="Markdown")
 
 
 @router_message.callback_query(lambda c: c.data.startswith("take_"))
@@ -345,6 +352,14 @@ async def bid_order_callback(callback_query: types.CallbackQuery, state: FSMCont
 @router_message.callback_query(lambda c: c.data.startswith("cancel_"))
 async def cancel_order_callback(callback_query: types.CallbackQuery):
     order_id = int(callback_query.data.split("_")[1])
+    get_status = await get_order_by_id(order_id)
+    order_stat = get_status.status
+    if order_stat == OrderStatus.CANCELED:
+        await callback_query.answer("Заказ анулирован")
+        await callback_query.message.delete()
+        
+        return
+
     order = await get_order_by_id(order_id)
     print("Order ID to cancel:", order_id)
     # await callback_query.answer(f"Вы отменили заказ {order_id}.", show_alert=True)
@@ -360,7 +375,7 @@ async def cancel_order_callback(callback_query: types.CallbackQuery):
     admins = await get_admins()
     tasks = []
     for admin in admins:
-        tasks.append(send_take_order_to_admin(admin, callback_query, order_id))
+        tasks.append(send_cancel_order_to_admin(admin, callback_query, order_id))
     await asyncio.gather(*tasks, return_exceptions=True)
 
     

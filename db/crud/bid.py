@@ -28,7 +28,14 @@ async def get_bid_by_id(bid_id: int) -> Bid | None:
             select(Bid).where(Bid.id == bid_id)
         )
         return res.scalar_one_or_none()
-    
+
+async def get_bids_by_order_id(order_id: int) -> list[Bid]:
+    async with SessionLocal() as session:
+        res = await session.execute(
+            select(Bid).where(Bid.order_id == order_id)
+        )
+        return res.scalars().all()
+
 async def update_bid(bid_id: int, **kwargs) -> Bid | None:
     async with SessionLocal() as session:
         async with session.begin():
@@ -41,7 +48,9 @@ async def update_bid(bid_id: int, **kwargs) -> Bid | None:
         await session.commit()
         await session.refresh(bid)
         return bid
-    
+
+
+
 # async def delete_bid(bid_id: int) -> bool:
 #     async with SessionLocal() as session:
 #         async with session.begin():

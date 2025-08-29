@@ -12,6 +12,7 @@ from telegram.bot import bot
 from db.crud.user import get_user_by_tg_id, create_user, update_user, get_user_by_id
 from db.crud.order import create_order, get_bid_by_driver_id,update_order, get_order_by_id
 from db.crud.order_messages import get_order_messages, delete_order_message
+from db.crud.bid import get_bids_by_order_id
 from db.models.user import Role, Status
 from db.models.order import Order, OrderStatus, OrderMode
 from db.core import get_drivers_for_order
@@ -82,6 +83,13 @@ async def push_order(callback_query: types.CallbackQuery):
         await delete_order_message(order.id,i.chat_id )
         if i.chat_id==user.tg_id:
             await create_order_message(order.id, i.chat_id, msg.message_id)
+    bidsget = await get_bids_by_order_id(order.id)
+    for bid in bidsget:
+        if bid.driver_id== driver_id:
+            pass
+        else:
+            user = await get_user_by_id(bid.driver_id)
+            await callback_query.bot.send_message(user.tg_id, f"Аукион по заказу {order.id} закончился и был выдан победителю.")
 
 
 
@@ -122,6 +130,7 @@ async def revoke_order(callback_query: types.CallbackQuery):
 
     user = await get_user_by_id(order.driver_id)
     await callback_query.bot.send_message(user.tg_id, f"Заказ {order.id} анулирован")
+    await update_order(order.id, status=OrderStatus.CANCELED)
 
 
 # ----------------- FSM Handlers -----------------

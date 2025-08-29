@@ -100,7 +100,7 @@ async def process_bid_amount(message: types.Message, state: FSMContext):
                     tasks.append(message.bot.send_message(
                         admin.tg_id,
                         f"Новая ставка {bid_amount} для заказа {order_id} от водителя {message.from_user.id}\n {text}.",
-                    reply_markup=generate_ikb_order_push(order_id, message.from_user.id)))
+                    reply_markup=generate_ikb_order_push(order_id, message.from_user.id), parse_mode='Markdown'))
                 await asyncio.gather(*tasks, return_exceptions=True)
 
                 
@@ -123,7 +123,7 @@ async def process_bid_amount(message: types.Message, state: FSMContext):
             tasks.append(message.bot.send_message(
                 admin.tg_id,
                 f"Новая ставка {bid_amount} для заказа {order_id} от водителя {message.from_user.id}\n {text}.",
-            reply_markup=generate_ikb_order_push(order_id, message.from_user.id)))
+            reply_markup=generate_ikb_order_push(order_id, message.from_user.id), parse_mode='Markdown'))
         await asyncio.gather(*tasks, return_exceptions=True)
     await state.clear()
 
