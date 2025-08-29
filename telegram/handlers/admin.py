@@ -62,6 +62,13 @@ async def push_order(callback_query: types.CallbackQuery):
 
     # Получаем числа
     order_id = int(parts[1])
+    order = await get_order_by_id(order_id)
+
+    if order.driver_id:
+        await callback_query.message.answer("К заказу уже назначен водитель")
+        await callback_query.message.edit_reply_markup()
+        return
+
     driver_id = int(parts[2])
     user = await get_user_by_tg_id(driver_id)
 
@@ -71,7 +78,6 @@ async def push_order(callback_query: types.CallbackQuery):
     await callback_query.message.edit_reply_markup()
     await callback_query.answer("Заказ отдан")
     print("da")
-    order = await get_order_by_id(order_id)
     print(order)
     msg = await callback_query.bot.send_message(user.tg_id, generate_auction_win_order(order))
 
