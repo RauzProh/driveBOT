@@ -42,6 +42,8 @@ async def order_city(message: types.Message, state: FSMContext):
         count = len(photos)
         spisok_photos = []
         for i, msg in enumerate(photos, start=1):
+            # if not msg.photo:  # пропустить сообщения без фото
+            #     continue
             # берём лучшее качество фото
             photo = msg.photo[-1]  
             file_id = photo.file_id  
@@ -172,11 +174,18 @@ async def order_city(message: types.Message, state: FSMContext):
             }
         user_get = await get_user_by_tg_id(message.from_user.id)
         get_text_reg_user = generate_text_new_reg_user(user_get)
+        print(documents)
         reg_media = create_registration_media(documents, selfie_caption=get_text_reg_user)
 
         await update_user(message.from_user.id, documents=documents, status=Status.PENDING)
         await message.answer(reg_finish)
-        admins = await get_admins()
+        print(123)
+        print("\n\n\n")
+        try:
+            admins = await get_admins()
+        except Exception as e:
+            print(f"Ошибка при получении админов: {e}")
+            admins = []
         print(admins)
         tasks = []
 

@@ -456,14 +456,17 @@ async def order_city(message: types.Message, state: FSMContext):
 
             await update_user(message.from_user.id, documents=documents, status=Status.PENDING)
             await message.answer(reg_finish)
+            print(123)
+            print("\n\n\n")
             admins = await get_admins()
             print(admins)
             user = await get_user_by_tg_id(message.from_user.id)
             # media = [ types.InputMediaPhoto(media=types.FSInputFile(user.car_photo), caption=get_text_reg_user) , types.InputMediaPhoto(media=types.FSInputFile(user.documents)) ]
             # # Параллельная рассылка
             tasks = []
-
+            print("Админы")
             for admin in admins:
+                print(f"Админ {admin.tg_id}")
                 # 1. Отправляем альбом
                 tasks.append(send_to_admin(message, reg_media, admin))
 
