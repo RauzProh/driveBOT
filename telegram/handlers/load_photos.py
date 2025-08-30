@@ -261,11 +261,11 @@ def create_registration_media(documents: Dict[str, List[str]], selfie_caption: s
     return media
 
 async def send_to_admin(message: types.Message, media, admin: User):
-    await message.bot.send_media_group(admin.tg_id, media=media)
+    await message.bot.send_media_group(admin.tg_id, media=media, parse_mode="Markdown")
     await message.bot.send_message(
                     admin.tg_id,
-                    f"Выберите действие для - {message.from_user.id}",
-                    reply_markup=ikb_admin_approve(message.from_user.id)  # если нужна клавиатура
+                    f"Выберите действие для - [{message.from_user.id}](tg://user?id={message.from_user.id})",
+                    reply_markup=ikb_admin_approve(message.from_user.id, parse_mode="Markdown")  # если нужна клавиатура
                 )
     return
 

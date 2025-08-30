@@ -7,11 +7,13 @@ from telegram.handlers.load_photos import router_photos
 from telegram.handlers.auction import router_auction
 
 from db.init_db import init_models
+from db.ensure_db import ensure_database_exists
 
 
 
 async def main():
     # await clear_table("users")
+    await ensure_database_exists()
     await init_models()
 
     dp.include_router(router_auction)
