@@ -24,6 +24,11 @@ async def get_order_by_id(order_id: int) -> Order | None:
         )
         return res.scalar_one_or_none()
     
+async def get_all_orders() -> list[Order]:
+    async with SessionLocal() as session:
+        res = await session.execute(select(Order))
+        return res.scalars().all()
+    
 async def update_order(order_id: int, **kwargs) -> Order | None:
     async with SessionLocal() as session:
         async with session.begin():

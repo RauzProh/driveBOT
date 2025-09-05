@@ -1,0 +1,31 @@
+# Базовый образ с Python 3.12
+FROM python:3.13-slim
+
+# Устанавливаем зависимости для сборки C-расширений
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем зависимости
+COPY requirements.txt .
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем весь код приложения
+COPY . .
+
+# Проброс порта
+EXPOSE 8000
+
+# Команда для запуска FastAPI через uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

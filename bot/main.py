@@ -8,9 +8,10 @@ from telegram.handlers.auction import router_auction
 
 from db.init_db import init_models
 
+from api import app  # FastAPI внутри бота
+import uvicorn
 
-
-async def main():
+async def start_bot():
     # await clear_table("users")
     await init_models()
 
@@ -24,6 +25,20 @@ async def main():
 
 
     await dp.start_polling(bot, skip_updates=True)
+
+
+async def start_api():
+    config = uvicorn.Config(app, host="0.0.0.0", port=8001, loop="asyncio")
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
+async def main():
+    # Запускаем бота и FastAPI параллельно
+    await asyncio.gather(
+        start_bot(),
+        start_api()
+    )
 
 
 if __name__ == "__main__":

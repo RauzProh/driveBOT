@@ -15,7 +15,7 @@ def generate_text_new_reg_user(user: User) -> str:
     text = f"Новый пользователь зарегистрировался в системе.\n\n\
 ID: {user.id}\n\
 Telegram ID: {user.tg_id}\n\
-ФИО: {user.full_name}\n\
+ФИО: [{user.full_name}](tg://user?id={user.tg_id}\n\
 Телефон: {user.phone}\n\
 Регион: {user.city}\n\
 Марка/модель авто: {user.car_brand}\n\

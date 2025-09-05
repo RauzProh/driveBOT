@@ -264,7 +264,7 @@ async def send_to_admin(message: types.Message, media, admin: User):
     await message.bot.send_media_group(admin.tg_id, media=media)
     await message.bot.send_message(
                     admin.tg_id,
-                    f"Выберите действие для - {message.from_user.id}",
+                    f"Выберите действие для - [{message.from_user.id}](tg://user?id={message.from_user.id}", parse_mode="Markdown",
                     reply_markup=ikb_admin_approve(message.from_user.id)  # если нужна клавиатура
                 )
     return
