@@ -54,6 +54,15 @@ async def create_user(
         await session.refresh(user)
         return user
 
+
+async def get_all_drivers() -> list["User"]:
+    async with SessionLocal() as session:
+        result = await session.execute(
+            select(User).where(User.role == "driver")  # предполагаем, что у User есть поле role
+        )
+        return result.scalars().all()
+
+
 # Обновить любые поля пользователя
 async def update_user(tg_id: int, **kwargs) -> User | None:
     async with SessionLocal() as session:

@@ -15,7 +15,7 @@ from db.crud.order_messages import get_order_messages, delete_order_message
 from db.crud.bid import get_bids_by_order_id
 from db.models.user import Role, Status
 from db.models.order import Order, OrderStatus, OrderMode
-from db.core import get_drivers_for_order
+from db.core import get_drivers_for_order, get_admins
 
 from telegram.texts import generate_auction_win_order, reg_text
 
@@ -37,12 +37,32 @@ async def broadcast_order(bot, order: Order):
             f"🚖 Класс авто: {order.car_class}\n"
             f"⛳ {order.from_address} → {order.to_address}\n"
             f"✈️ Номер рейса: {order.trip_number}\n"
-            f"💬 Комментарии: {order.comments or 'нет'}\n"
+            f"💬 Комментарий: {order.comments or 'нет'}\n"
             f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
             reply_markup=build_order_buttons(order)
         )
         await create_order_message(order.id, driver.tg_id, msg.message_id)
 
+async def broadcast_order_to_admins(bot, order: Order):
+    admins = await get_admins()
+    print("BROADCAST TO ADMINS")
+    print(admins)
+
+    for admin in admins:
+        print(f'admin: {admin.tg_id}')
+        msg = await bot.send_message(
+            admin.tg_id,
+            f"{'❗ Новый заказ' if order.price else '❓Новый запрос'} №{order.id}:\n"
+            f"🕐 Время: {order.scheduled_time}\n"
+            f"🚖 Класс авто: {order.car_class}\n"
+            f"⛳ {order.from_address} → {order.to_address}\n"
+            f"✈️ Номер рейса: {order.trip_number}\n"
+            f"💬 Комментарий: {order.comments or 'нет'}\n"
+            f"{'💰 Стоимость: ' + str(order.price) if order.price else ''}",
+            reply_markup=build_order_admins_buttons(order)
+        )
+         # Если нужно сохранять сообщение (как у водителей) – добавь аналогичный вызов:
+        await create_order_message(order.id, admin.tg_id, msg.message_id)
 
 
 
@@ -135,8 +155,9 @@ async def revoke_order(callback_query: types.CallbackQuery):
                 pass
 
     user = await get_user_by_id(order.driver_id)
-    await callback_query.bot.send_message(user.tg_id, f"Заказ {order.id} анулирован")
     await update_order(order.id, status=OrderStatus.CANCELED)
+    if user:
+        await callback_query.bot.send_message(user.tg_id, f"Заказ {order.id} анулирован")
 
 
 # ----------------- FSM Handlers -----------------
@@ -221,7 +242,7 @@ async def order_mode(message: types.Message, state: FSMContext):
 
 
     await state.set_state(OrderForm.comments)
-    await message.answer("Комментарии к заказу (опционально):")
+    await message.answer("Комментарий к заказу (опционально):")
 
 
 @router_admin.message(OrderForm.comments)
@@ -251,15 +272,16 @@ async def finish_order(message: types.Message, state: FSMContext):
     )
 
     await broadcast_order(bot, order)
+    await broadcast_order_to_admins(bot, order)
     await message.answer("Заказ опубликован и разослан водителям!")
-    msg = await message.answer(
-            f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
-            f"🕐 Время: {order.scheduled_time}\n"
-            f"🚖 Класс авто: {order.car_class}\n"
-            f"⛳ {order.from_address} → {order.to_address}\n"
-            f"✈️ Номер рейса: {order.trip_number}\n"
-            f"💬 Комментарии: {order.comments or 'нет'}\n"
-            f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
-            reply_markup=build_order_admins_buttons(order)
-        )
+    # msg = await message.answer(
+    #         f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
+    #         f"🕐 Время: {order.scheduled_time}\n"
+    #         f"🚖 Класс авто: {order.car_class}\n"
+    #         f"⛳ {order.from_address} → {order.to_address}\n"
+    #         f"✈️ Номер рейса: {order.trip_number}\n"
+    #         f"💬 Комментарии: {order.comments or 'нет'}\n"
+    #         f"{"💰 Стоимость:" +str(order.price) if order.price else ''}",
+    #         reply_markup=build_order_admins_buttons(order)
+    #     )
     await state.clear()

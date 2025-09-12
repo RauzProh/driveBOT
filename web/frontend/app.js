@@ -1,43 +1,89 @@
 let token = null;
 
-// document.getElementById("loginForm").addEventListener("submit", async (e) => {
-//   e.preventDefault();
-//   const username = document.getElementById("username").value;
-//   const password = document.getElementById("password").value;
+document.addEventListener("DOMContentLoaded", async () => {
+  const overlay = document.getElementById("loginOverlay");
 
-//   const formData = new URLSearchParams();
-//   formData.append("username", username);
-//   formData.append("password", password);
-//     console.log(formData.toString());
-//   const res = await fetch("/token", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//     body: formData.toString(),
-//   });
+  if (!(await isTokenActive())) {
+    overlay.style.display = "flex"; 
+    return;
+  }
 
-//   const data = await res.json();
+  const path = window.location.pathname;
+  if (path === "/drivers") {
+    renderDrivers();
+  } else if (path === "/") {
+    renderOrders();
+  }
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const path = window.location.pathname;
+  if (path === "/drivers") {
+
+  } else if (path === "/") {
+        // запуск при загрузке страницы
+    updateLeft();
+
+    // запуск при изменении размера окна
+    window.addEventListener('resize', updateLeft);
+
+
+
+    // обработка формы
+    document.getElementById("orderForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const order = Object.fromEntries(formData.entries());
+    console.log("Новый заказ:", order);
+    createOrder(order);
+
+    // TODO: отправка на сервер через fetch("/create-order", {method:"POST", body: JSON.stringify(order)})
+    
+    alert("Заказ создан!");
+    closeOrder();
+    renderOrders(); // обновляем список заказов
+    });
+  }
+});
+
+
+
+
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  const formData = new URLSearchParams();
+  formData.append("username", username);
+  formData.append("password", password);
+    console.log(formData.toString());
+  const res = await fetch("/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  });
+
+  const data = await res.json();
 //   if (data.access_token) {
 //     token = data.access_token;
 //     document.getElementById("result").innerText = "Logged in! Token: " + token;
 //   } else {
 //     document.getElementById("result").innerText = "Error: " + data.error;
 //   }
-// });
-
-// async function getSecure() {
-//   const res = await fetch("/secure-data", {
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   const data = await res.json();
-//   document.getElementById("result").innerText = JSON.stringify(data);
-// }
+    if (data.access_token) {
+        localStorage.setItem("token", data.access_token); // сохраняем
+        // document.getElementById("result").innerText = "Logged in!";
+        document.getElementById("loginOverlay").style.display = "none"; // скрыть окно
+        renderOrders(); // загрузить заказы
+        // alert("Успешный вход!");
+    } else {
+        alert("Неверный логин или пароль!");
+    }
+});
 
 async function getSecure() {
-  console.log("Token being sent:", token); // <--- добавь
-  const restt = await createOrder("Test Order", token);
-  const orders = await getOrders(token);
-  console.log(orders);
-  console.log("Create Order Response:", restt); // <--- добавь
   const res = await fetch("/secure-data", {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -45,7 +91,33 @@ async function getSecure() {
   document.getElementById("result").innerText = JSON.stringify(data);
 }
 
-async function getOrders(token) {
+async function isTokenActive() {
+  const token = localStorage.getItem("token");
+  if (!token) return false;
+
+  try {
+    const res = await fetch("/secure-data", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      return true; // токен жив
+    } else {
+      console.warn("Token invalid:", res.status);
+      return false;
+    }
+  } catch (e) {
+    console.error("Ошибка проверки токена:", e);
+    return false;
+  }
+}
+
+async function getOrders() {
+     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
   try {
     const response = await fetch("/getorders", {
       method: "GET",
@@ -71,24 +143,26 @@ async function getOrders(token) {
 }
 
 
-async function createOrder(orderName, token) {
-  try {
-    // Формируем данные для отправки
-    const formData = new URLSearchParams();
-    formData.append("order_name", orderName);
+async function createOrder(order) {
+    const token = localStorage.getItem("token");
+    console.log("Creating order with token:", token, "and order:", order); // <--- добавь
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
 
-    // Делаем POST-запрос
+  try {
     const response = await fetch("/create-order", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`, // токен пользователя
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/json"
       },
-      body: formData
+      body: JSON.stringify(order) // отправляем JSON, а не formData
     });
 
-    // Получаем JSON с результатом
     const data = await response.json();
+    console.log("Response from createOrder:", data);
 
     if (response.ok) {
       console.log("Заказ создан:", data);
@@ -112,10 +186,252 @@ function updateLeft() {
     const blockWidth = block.offsetWidth;   // ширина блока
     block.style.position = 'absolute';      // обязательно absolute
     block.style.left = `${screenWidth / 2 - blockWidth / 2}px`; // центрирование
+}
+
+
+
+// const select = document.querySelector(".select-custom");
+//   const placeholder = select.querySelector(".select-custom-link-display__placeholder");
+//   const options = select.querySelectorAll(".option");
+
+//   placeholder.addEventListener("click", () => {
+//     select.classList.toggle("open");
+//   });
+
+//   options.forEach(option => {
+//     option.addEventListener("click", () => {
+//       placeholder.textContent = option.textContent;
+//       select.classList.remove("open");
+//     });
+//   });
+
+//   document.addEventListener("click", (e) => {
+//     if (!select.contains(e.target)) {
+//       select.classList.remove("open");
+//     }
+//   });
+
+
+function createOrderOpen() {
+  document.getElementById("orderOverlay").style.display = "flex";
+}
+
+function closeOrder() {
+  document.getElementById("orderOverlay").style.display = "none";
+}
+
+
+
+
+
+async function getDrivers() {
+     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
+  try {
+    const response = await fetch("/getdrivers", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Полученные водители", data.drivers);
+      return data.drivers;
+    } else {
+      console.error("Ошибка при получении заказов:", data);
+      return [];
+    }
+  } catch (error) {
+    console.error("Ошибка запроса:", error);
+    return [];
+  }
+}
+
+
+
+async function cancelOrder(orderId) {
+    
+  if (!confirm(`Вы точно хотите отменить заказ #${orderId}?`)) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`/cancel-order/${orderId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      alert("Заказ отменён");
+      await renderOrders(); // обновляем список после отмены
+    } else {
+      alert("Ошибка при отмене: " + data.detail);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Ошибка запроса");
+  }
+}
+
+async function renderOrders() {
+  const orders = await getOrders();
+  const drivers = await getDrivers();
+  console.log(drivers)
+  const container = document.querySelector(".trips-new-list");
+  container.innerHTML = "";
+
+  if (!orders || orders.length === 0) {
+    container.innerHTML = "<div>Нет заказов</div>";
+    return;
   }
 
-  // запуск при загрузке страницы
-  updateLeft();
+  orders.sort((a, b) => new Date(b.scheduled_time) - new Date(a.scheduled_time));
 
-  // запуск при изменении размера окна
-  window.addEventListener('resize', updateLeft);
+  let prevDateKey = null;
+
+  for (const order of orders) {
+    const dt = new Date(order.scheduled_time);
+    const dateKey = `${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}`;
+
+    if (dateKey !== prevDateKey) {
+      prevDateKey = dateKey;
+      const dateLabel = dt.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+      container.insertAdjacentHTML("beforeend", `<div class="trips-new-list-date">${dateLabel}</div>`);
+    }
+
+    const time = dt.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    const fromText = order.from_address + (order.trip_number ? ` (${order.trip_number})` : "");
+    const priceText = (order.price !== null && order.price !== undefined) ? `${order.price} ₽` : "—";
+    const carClass = order.car_class || "—";
+    const passenger = order.passenger_info || "—";
+    const statusClass = order.status || "";
+    const modeText = (order.mode === "fcfs") ? "FCFS" : (order.mode === "auction" ? "Auction" : order.mode);
+    const driverid = order.driver_id || "—";
+
+    const cardHtml = `
+      <div class="trip-card" data-order-id="${order.id}">
+        <div class="fline">
+          <div class="time">${time}</div>
+          <div>
+            <div class="order_info">
+              <div>${carClass}</div>
+              <div class="devinder"></div>
+              <div class="price">${priceText}</div>
+            </div>
+            <div>${driverid}</div>
+          </div>
+          <div class="status ${statusClass}">${statusClass}</div>
+          <div class="ordertype">${modeText}</div>
+          <div class="orderid">#${order.id}</div>
+        </div>
+        <div class="from">Откуда: ${escapeHtml(fromText)}</div>
+        <div class="lline">
+            <div class="to">Куда: ${escapeHtml(order.to_address || "Без водителя")}</div>
+            <div style="margin-left: auto;">
+                <button class="cancelbtn">Отменить</button>
+            </div>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", cardHtml);
+  }
+
+  // Навешиваем обработчики на кнопки через отдельную функцию
+  container.querySelectorAll(".cancelbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const orderId = btn.closest(".trip-card").dataset.orderId;
+      cancelOrder(orderId);
+      renderOrders(); // обновляем список заказов
+    });
+  });
+}
+
+// простая защита от инъекций, если данные из внешнего источника
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+
+
+// async function renderDrivers() {
+//   const drivers = await getDrivers();
+//   const list = document.querySelector(".drivers-list");
+//   list.innerHTML = ""; // очистка
+
+//   drivers.forEach(driver => {
+//     const photo = driver.documents?.selfie || "placeholder.jpg";
+//     const card = document.createElement("div");
+//     card.className = "driver-card";
+
+//     card.innerHTML = `
+//       <div class="driver-photo">
+//         <img src="${photo}" alt="Фото водителя">
+//       </div>
+//       <div class="driver-info">
+//         <h3 class="driver-name">${driver.full_name || "Неизвестно"}</h3>
+//         <p class="driver-phone">Телефон: ${driver.phone || "-"}</p>
+//         <p class="driver-city">Город: ${driver.city || "-"}</p>
+//         <p class="driver-car">
+//           Авто: ${driver.car_brand || ""} 
+//           ${driver.car_model || ""}, 
+//           ${driver.car_color || ""}, 
+//           ${driver.car_number || ""}
+//         </p>
+//         <p class="driver-rating">Рейтинг: ${driver.rating ?? "нет данных"}</p>
+//         <p class="driver-orders">
+//           Выполнено: ${driver.completed_orders} | Отменено: ${driver.cancelled_orders}
+//         </p>
+//       </div>
+//     `;
+
+//     list.appendChild(card);
+//   });
+// }
+
+
+async function renderDrivers() {
+  const drivers = await getDrivers();
+  const list = document.querySelector(".drivers-list");
+  list.innerHTML = ""; // очистка
+
+  drivers.forEach(driver => {
+    const photo = driver.documents?.selfie || "placeholder.jpg";
+    const card = document.createElement("div");
+    card.className = "driver-card";
+
+    card.innerHTML = `
+      <div class="driver-photo">
+        <img src="driverphoto" alt="Фото водителя">
+      </div>
+      <div class="driver-info">
+        <h3 class="driver-name">${driver.full_name || "Неизвестно"}</h3>
+        <p class="driver-phone">Телефон: ${driver.phone || "-"}</p>
+        <p class="driver-city">Регион: ${driver.city || "-"}</p>
+        <p class="driver-car">
+          Авто: ${driver.car_brand || ""} 
+          ${driver.car_model || ""}, 
+          ${driver.car_color || ""}, 
+          ${driver.car_number || ""}
+        </p>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+

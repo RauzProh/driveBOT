@@ -14,34 +14,142 @@
     <button onclick="getSecure()">Get Secure Data</button>
     <div id="result"></div>
      -->
+    <div class="overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>Авторизация</h2>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Логин" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <button type="submit">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="overlay2" id="orderOverlay">
+  <div class="modal">
+        <h2>Создание заказа</h2>
+        <form id="orderForm">
+        <label>Регион заказа:</label>
+        <!-- <input type="text" name="region" required> -->
+        <select name="region" required>
+            <option value="Краснодарский край">Краснодарский край</option>
+            <option value="Ставропольский край">Ставропольский край</option>
+            <option value="Крым">Крым</option>
+        </select>
+
+        <label>Адрес подачи:</label>
+        <input type="text" name="from" placeholder="Откуда" required>
+        <!-- <input type="text" name="from2" placeholder="Доп. адрес (опционально)"> -->
+
+        <label>Адрес назначения:</label>
+        <input type="text" name="to" required>
+
+        <label>Дата и время подачи:</label>
+        <input type="datetime-local" name="datetime" required>
+
+        <label>Класс авто:</label>
+        <select name="car_class" required>
+            <option value="Эко">Эко</option>
+            <option value="Комфорт">Комфорт</option>
+            <option value="Бизнес">Бизнес</option>
+        </select>
+
+        <label>Стоимость заказа (0 = аукцион):</label>
+        <input type="number" name="price" min="0">
+
+        <label>Режим заказа:</label>
+        <select name="mode" required>
+            <option value="fcfs">FCFS</option>
+            <option value="auction">AUCTION</option>
+        </select>
+
+        <label>Номер рейса:</label>
+        <input type="text" name="flight">
+
+        <label>Комментарии:</label>
+        <textarea name="comment"></textarea>
+
+        <label>Контакт пассажира:</label>
+        <input type="text" name="contact" required>
+
+        <div class="modal-actions">
+            <button type="button" onclick="closeOrder()">Отмена</button>
+            <button type="submit">Опубликовать</button>
+        </div>
+        </form>
+    </div>
+    </div>
 
     <div class="root">
         <div class="navbar">
-            <div class="logo">ELITE TRANSFER</div>
+            <a href="/">
+                <div class="logo">ELITE TRANSFER</div>
+
+            </a>
             <div class="menu">
-                <div class="menu-item">Заказы</div>
-                <div class="menu-item">Водители</div>
-                <div class="menu-item">Авто</div>
+                <a href="/">
+                    <div class="menu-item">Заказы</div>
+                </a>
+                <a href="/drivers">
+
+                    <div class="menu-item">Водители</div>
+                </a>
+                <!-- <div class="menu-item">Авто</div>
                 <div class="menu-item">Клиенты</div>
                 <div class="menu-item">Отчеты</div>
-                <div class="menu-item">Настройки</div>
+                <div class="menu-item">Настройки</div> -->
             </div>
         </div>
         
     
         <div class="trips">
-            <div class="trips-new-filters-desktop">
-                <div class="trips-filter-block">
+               <div class="trips-new-filters-desktop">
+                <!-- <div class="trips-filter-block">
                     <div class="trips-filter-block__label">Водитель</div>
-                    <div class="select-custom">
 
-                        <div class="select-custom-dropdown">.select-custom-options__list</div>
+                    <div class="select-custom">
+                        <div class="select-custom-link-display__placeholder">Выбрать</div>
+
+                        <div class="select-custom-dropdown">
+                        <div class="select-custom-options__list">
+                            <div class="option">Иван Иванов</div>
+                            <div class="option">Петр Петров</div>
+                            <div class="option">Сергей Сергеев</div>
+                        </div>
+                        </div>
                     </div>
-                </div>
+                </div> -->
+                <div class="createorder"><button class="createorder" onclick="createOrderOpen()">
+                    Создать
+                </button></div>
             </div>
             <div class="trip-content">
                 <div class="trips-new-list">
                     <div class="trips-new-list-date">1 сентября</div>
+                    <div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="ordertype">Auction</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div class="from">Москва, ул. Ленина, 1</div>
+                        <div class="lline">
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                            <div style="margin-left: auto;">
+                                <button class="cancelbtn">Отменить </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="trip-card">
                         <div class="fline">
                             <div class="time">12:00</div>
@@ -118,6 +226,85 @@
                             <div class="from">Москва, ул. Ленина, 1</div>
                             <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
                         </div>
+                    </div>
+                    <div class="trips-new-list-date">1 сентября</div>
+                    <div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="ordertype">Auction</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
                     </div><div class="trip-card">
                         <div class="fline">
                             <div class="time">12:00</div>
@@ -138,9 +325,109 @@
                             <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
                         </div>
                     </div>
+                    <div class="trips-new-list-date">1 сентября</div>
+                    <div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="ordertype">Auction</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                    </div><div class="trip-card">
+                        <div class="fline">
+                            <div class="time">12:00</div>
+                            <div>
+                                <div class="order_info">
+                                    <div>Business</div>
+                                    <div class="devinder"></div>
+                                    <div class="price">2500 ₽</div>
+
+                                </div>
+                                <div>Прохоров Кирилл</div>
+                            </div>
+                            <div class="status confirmed">Подтвержден</div>
+                            <div class="orderid">#21412421</div>
+                        </div>
+                        <div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
+                        </div>
+                        <div><button>Отменить</button></div>
+                    </div>
                 </div>
                 <div class="trips-new-details trips-new-details_desktop" style="display: none;">wadwa</div>
-                <div class="trips-new-info">Информация о заказе</div>
+                <div class="trips-new-info"></div>
+                <!-- <div class="trips-new-info">Информация о заказе</div> -->
             </div>
         </div>
 

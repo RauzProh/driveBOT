@@ -1,9 +1,12 @@
-from fastapi import FastAPI, Depends, Form
+from fastapi import FastAPI, Depends, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
+
 from backend.auth import create_access_token, verify_password, fake_users_db
 from backend.deps import get_current_user
+from backend.schemas import OrderRequest
+
 from fastapi.responses import JSONResponse
 import requests
 
@@ -20,6 +23,10 @@ BOT_API_KEY = "mysecret123"  # секрет для внутреннего API
 @app.get("/")
 def read_index():
     return FileResponse("frontend/index.html")
+
+@app.get("/drivers")
+def read_index():
+    return FileResponse("frontend/drivers.html")
 
 import logging
 
@@ -47,17 +54,34 @@ def secure_data(user: dict = Depends(get_current_user)):
 
 
 
-@app.post("/create-order")
-def create_order(order_name: str = Form(...), user: dict = Depends(get_current_user)):
-    # 1. Сохраняем заказ в базу (например, SQLite / Postgres)
-    order_data = {"order_name": order_name, "user": user["username"]}
+from datetime import datetime
 
-    # 2. Отправляем данные на бот через API
-    resp = requests.post(
-        f"{BOT_API_URL}/create-order",
-        json=order_data,
-        headers={"X-API-KEY": BOT_API_KEY}
-    )
+@app.post("/create-order")
+def create_order(order: OrderRequest, user: dict = Depends(get_current_user)):
+    print("✅ Order получен:", order.dict())
+    print("✅ User:", user)
+
+    order_data = order.dict()
+    order_data["user"] = user["username"]
+
+    # сериализуем datetime в строку
+    if isinstance(order_data["datetime"], datetime):
+        order_data["datetime"] = order_data["datetime"].isoformat()
+
+    print("✅ Отправляем в бота:", order_data)
+
+    try:
+        resp = requests.post(
+            f"{BOT_API_URL}/create-order",
+            json=order_data,
+            headers={"X-API-KEY": BOT_API_KEY},
+            timeout=5
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Bot API error: {e}")
+
+    print("✅ Ответ от бота:", resp.status_code, resp.text)
+
     if resp.status_code != 200:
         return {"status": "error", "detail": resp.text}
 
@@ -87,3 +111,60 @@ def proxy_get_orders(user: dict = Depends(get_current_user)):
         )
 
     return resp.json()
+
+
+
+@app.get("/getdrivers")
+def proxy_get_drivers(user: dict = Depends(get_current_user)):
+    """
+    Получаем список заказов из бота и проксируем пользователю
+    """
+    try:
+        resp = requests.get(
+            f"{BOT_API_URL}/getdrivers",
+            headers={"X-API-KEY": BOT_API_KEY}
+        )
+    except requests.exceptions.RequestException as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "detail": str(e)}
+        )
+
+    if resp.status_code != 200:
+        return JSONResponse(
+            status_code=resp.status_code,
+            content={"status": "error", "detail": resp.text}
+        )
+
+    return resp.json()
+
+@app.post("/cancel-order/{order_id}")
+def cancel_order(order_id: int, user: dict = Depends(get_current_user)):
+    """
+    Отменяем заказ через бота
+    """
+    try:
+        resp = requests.post(
+            f"{BOT_API_URL}/cancel-order/{order_id}",
+            headers={"X-API-KEY": BOT_API_KEY}
+        )
+    except requests.exceptions.RequestException as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "detail": str(e)}
+        )
+
+    if resp.status_code != 200:
+        return JSONResponse(
+            status_code=resp.status_code,
+            content={"status": "error", "detail": resp.text}
+        )
+
+    # Успешно
+    return {"status": "ok", "order_id": order_id}
+
+
+
+@app.get("/driverphoto")
+def driverphoto():
+    return FileResponse("frontend/driverphoto.jpg")

@@ -8,7 +8,7 @@ from telegram.keyboards import kb_get_number, ikb_admin_choice, ikb_admin_approv
 from db.models.user import Role, Status, User
 from db.crud.user import create_user, get_user_by_tg_id, update_user
 from db.crud.order import create_order, get_order_by_id, update_order, get_bid_by_driver_id
-from db.crud.order_messages import get_order_messages, delete_order_message, get_order_message
+from db.crud.order_messages import get_order_messages, delete_order_message, get_order_message, create_order_message
 
 from db.core import get_admins, take_order, bid_order, get_actual_orders_for_admin
 from db.models.order import Order, OrderStatus, OrderMode
@@ -73,7 +73,7 @@ async def messages(message: types.Message, state: FSMContext):
             tg_id=tg_id,
             role=Role.DRIVER
         )
-        if str(tg_id) in ['794637958', "820119800", "8015538036", "665543077"]:
+        if str(tg_id) in ['794637958',"8088708073", "5877487979", "820119800", "8015538036", "665543077"]:
              await update_user(tg_id, role=Role.ADMIN)
     
     
@@ -273,10 +273,11 @@ async def take_order_callback(callback_query: types.CallbackQuery):
         await callback_query.answer(f"Извините, заказ {order_id} уже взят другим водителем.", show_alert=True)
     else:
         await callback_query.answer(f"Вы успешно взяли заказ {order_id}.", show_alert=True)
-        await callback_query.bot.send_message(
+        msg = await callback_query.bot.send_message(
             callback_query.from_user.id,
-            f"Связь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
+            f"Заказ {order_id}\n\nСвязь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
         )
+        await create_order_message(order_id, msg.chat.id, msg.message_id)
         order_messages = await get_order_messages(order_id)
         for i in order_messages:
             try:
