@@ -273,11 +273,23 @@ async def take_order_callback(callback_query: types.CallbackQuery):
         await callback_query.answer(f"Извините, заказ {order_id} уже взят другим водителем.", show_alert=True)
     else:
         await callback_query.answer(f"Вы успешно взяли заказ {order_id}.", show_alert=True)
-        msg = await callback_query.bot.send_message(
-            callback_query.from_user.id,
-            f"Заказ {order_id}\n\nСвязь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
+        # await callback_query.bot.send_message(
+        #     callback_query.from_user.id,
+        #     f"\n\nСвязь с пассажиром: {res.passenger_info}", reply_markup=generate_ikb_order_control(order_id)
+        # )
+        current_text = callback_query.message.text
+
+        # добавляем нужный текст в конец
+        new_text = f"{current_text}\n\nСвязь с пассажиром: {res.passenger_info}"
+
+        # редактируем сообщение
+        await callback_query.message.edit_text(
+            new_text,
+            reply_markup=generate_ikb_order_control(order_id)  # новая клавиатура
         )
-        await create_order_message(order_id, msg.chat.id, msg.message_id)
+
+    
+        # await create_order_message(order_id, msg.chat.id, msg.message_id)
         order_messages = await get_order_messages(order_id)
         for i in order_messages:
             try:
@@ -287,8 +299,6 @@ async def take_order_callback(callback_query: types.CallbackQuery):
                 await delete_order_message(order_id, i.chat_id)
             except Exception:
                 pass
-            
-        await callback_query.message.edit_reply_markup()  # Убираем кнопки после успешного
         admins = await get_admins()
         tasks = []
         for admin in admins:
