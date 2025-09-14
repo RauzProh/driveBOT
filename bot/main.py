@@ -13,6 +13,7 @@ import uvicorn
 
 async def start_bot():
     # await clear_table("users")
+    print('Бот запущен')
     await init_models()
 
     dp.include_router(router_auction)

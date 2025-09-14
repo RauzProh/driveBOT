@@ -58,7 +58,7 @@ async def create_user(
 async def get_all_drivers() -> list["User"]:
     async with SessionLocal() as session:
         result = await session.execute(
-            select(User).where(User.role == "driver")  # предполагаем, что у User есть поле role
+            select(User).where(User.role == Role.DRIVER)  # предполагаем, что у User есть поле role
         )
         return result.scalars().all()
 

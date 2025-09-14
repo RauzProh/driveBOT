@@ -251,7 +251,7 @@ def create_registration_media(documents: Dict[str, List[str]], selfie_caption: s
 
     # 2. Селфи с подписью
     if selfie := documents.get("selfie"):
-        media.insert(0, types.InputMediaPhoto(media=types.FSInputFile(selfie), caption=selfie_caption))
+        media.insert(0, types.InputMediaPhoto(media=types.FSInputFile(selfie), caption=selfie_caption, parse_mode="Markdown"))
 
     # 3. Документы: водительское удостоверение и СТС
     for doc_type in ["driver_license", "sts"]:
