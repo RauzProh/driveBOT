@@ -8,6 +8,7 @@ from aiogram import Router
 from telegram.states import OrderForm
 from telegram.keyboards import kb_get_number, build_order_buttons, admin_panel, choice_region, choice_order_mod, build_order_admins_buttons
 from telegram.bot import bot
+import logging
 
 from db.crud.user import get_user_by_tg_id, create_user, update_user, get_user_by_id
 from db.crud.order import create_order, get_bid_by_driver_id,update_order, get_order_by_id
@@ -123,10 +124,12 @@ async def push_order(callback_query: types.CallbackQuery):
 async def accept_user_callback(callback_query: types.CallbackQuery):
     tg_id = int(callback_query.data.split("_")[1])
     user = await get_user_by_tg_id(tg_id)
-    print(user)
+    # print(user)
+    logging.info(user)
     if user:
         res = await update_user(tg_id, status=Status.APPROVED, role=Role.DRIVER)
-        print(res)
+        # print(res)
+        logging.info(res)
         await callback_query.bot.send_message(tg_id, "Ваша регистрация одобрена! Теперь вы можете использовать бота.")
         await callback_query.bot.send_message(tg_id, reg_text)
         await callback_query.message.edit_reply_markup()

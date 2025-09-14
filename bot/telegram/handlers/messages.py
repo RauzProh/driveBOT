@@ -73,13 +73,13 @@ async def messages(message: types.Message, state: FSMContext):
             tg_id=tg_id,
             role=Role.DRIVER
         )
-        if str(tg_id) in ['794637958',"8088708073", "5877487979", "820119800", "8015538036", "665543077"]:
+        if str(tg_id) in ['794637958', "5877487979", "820119800", "8015538036", "665543077"]:
              await update_user(tg_id, role=Role.ADMIN)
     
     
     res = await get_user_by_tg_id(message.from_user.id)
 
-    print(res.__dict__)
+    
 
     if message.text == 'Новый заказ' and res.role == Role.ADMIN:
         tg_id = message.from_user.id

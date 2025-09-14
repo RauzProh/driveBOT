@@ -1,7 +1,9 @@
 from sqlalchemy import select, update
-import enum
+
 from db.session import SessionLocal
 from db.models.user import User, Role, Status, Availability
+
+import logging
 
 # Получить пользователя по Telegram ID
 async def get_user_by_tg_id(tg_id: int) -> User | None:
@@ -73,18 +75,13 @@ async def update_user(tg_id: int, **kwargs) -> User | None:
                 return None
             for key, value in kwargs.items():
                 if hasattr(user, key):
-                    if isinstance(value, enum.Enum):
-                        setattr(user, key, value.value)
-                    else:
-                        setattr(user, key, value)
-            session.add(user)  # на всякий случай
-            print('Updated user:')
-            print(user)
-            print(user.status)
-            print(user.role)
+                    setattr(user, key, value)
+            logging.info(f"Updated user {tg_id} with {kwargs}")
+            logging.info(user)
+            logging.info(user.__dict__)
+        await session.commit()
         await session.refresh(user)
         return user
-
 
 # Обновить только телефон
 async def update_user_phone(tg_id: int, phone: str) -> User | None:

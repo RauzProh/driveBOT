@@ -5,6 +5,9 @@ from telegram.handlers.messages import router_message
 from telegram.handlers.admin import router_admin
 from telegram.handlers.load_photos import router_photos
 from telegram.handlers.auction import router_auction
+import logging
+logging.basicConfig(level=logging.INFO)
+logging.info("Я тут!")
 
 from db.init_db import init_models
 
@@ -13,7 +16,6 @@ import uvicorn
 
 async def start_bot():
     # await clear_table("users")
-    print('Бот запущен')
     await init_models()
 
     dp.include_router(router_auction)
