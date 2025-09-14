@@ -123,8 +123,10 @@ async def push_order(callback_query: types.CallbackQuery):
 async def accept_user_callback(callback_query: types.CallbackQuery):
     tg_id = int(callback_query.data.split("_")[1])
     user = await get_user_by_tg_id(tg_id)
+    print(user)
     if user:
-        await update_user(tg_id, status=Status.APPROVED, role=Role.DRIVER)
+        res = await update_user(tg_id, status=Status.APPROVED, role=Role.DRIVER)
+        print(res)
         await callback_query.bot.send_message(tg_id, "Ваша регистрация одобрена! Теперь вы можете использовать бота.")
         await callback_query.bot.send_message(tg_id, reg_text)
         await callback_query.message.edit_reply_markup()
