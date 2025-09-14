@@ -78,6 +78,10 @@ async def update_user(tg_id: int, **kwargs) -> User | None:
                     else:
                         setattr(user, key, value)
             session.add(user)  # на всякий случай
+            print('Updated user:')
+            print(user)
+            print(user.status)
+            print(user.role)
         await session.refresh(user)
         return user
 
