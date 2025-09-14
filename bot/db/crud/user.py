@@ -1,5 +1,5 @@
 from sqlalchemy import select, update
-
+import enum
 from db.session import SessionLocal
 from db.models.user import User, Role, Status, Availability
 
@@ -73,10 +73,14 @@ async def update_user(tg_id: int, **kwargs) -> User | None:
                 return None
             for key, value in kwargs.items():
                 if hasattr(user, key):
-                    setattr(user, key, value)
-        await session.commit()
+                    if isinstance(value, enum.Enum):
+                        setattr(user, key, value.value)
+                    else:
+                        setattr(user, key, value)
+            session.add(user)  # на всякий случай
         await session.refresh(user)
         return user
+
 
 # Обновить только телефон
 async def update_user_phone(tg_id: int, phone: str) -> User | None:
