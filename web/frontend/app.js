@@ -32,7 +32,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // обработка формы
     document.getElementById("orderForm").addEventListener("submit", function(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const formData = new FormData(form);
     const order = Object.fromEntries(formData.entries());
     console.log("Новый заказ:", order);
     createOrder(order);
@@ -42,6 +43,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("Заказ создан!");
     closeOrder();
     renderOrders(); // обновляем список заказов
+    // Очищаем форму
+    form.reset();
     });
   }
 });
