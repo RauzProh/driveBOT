@@ -373,6 +373,8 @@
 
 .border_box {
     border: 1px solid #d8b65d;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 /* окно */
