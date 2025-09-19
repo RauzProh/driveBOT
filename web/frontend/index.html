@@ -27,58 +27,61 @@
     </div>
 
     <div class="overlay2" id="orderOverlay">
-  <div class="modal">
-        <h2>Создание заказа</h2>
-        <form id="orderForm">
-        <label>Регион заказа:</label>
-        <!-- <input type="text" name="region" required> -->
-        <select name="region" required>
-            <option value="Краснодарский край">Краснодарский край</option>
-            <option value="Ставропольский край">Ставропольский край</option>
-            <option value="Крым">Крым</option>
-        </select>
+        <div class="border_box">
+            <div class="modal">
+                    <h2>Создание заказа</h2>
+                    <form id="orderForm">
+                    <label>Регион заказа:</label>
+                    <!-- <input type="text" name="region" required> -->
+                    <select name="region" required>
+                        <option value="Краснодарский край">Краснодарский край</option>
+                        <option value="Ставропольский край">Ставропольский край</option>
+                        <option value="Крым">Крым</option>
+                    </select>
+    
+                    <label>Адрес подачи:</label>
+                    <input type="text" name="from" placeholder="Откуда" required>
+                    <!-- <input type="text" name="from2" placeholder="Доп. адрес (опционально)"> -->
+    
+                    <label>Адрес назначения:</label>
+                    <input type="text" name="to" required>
+    
+                    <label>Дата и время подачи:</label>
+                    <input type="datetime-local" name="datetime" required>
+    
+                    <label>Класс авто:</label>
+                    <select name="car_class" required>
+                        <option value="Эко">Эко</option>
+                        <option value="Комфорт">Комфорт</option>
+                        <option value="Бизнес">Бизнес</option>
+                    </select>
+    
+                    <label>Стоимость заказа (0 = аукцион):</label>
+                    <input type="number" name="price" min="0">
+    
+                    <label>Режим заказа:</label>
+                    <select name="mode" required>
+                        <option value="fcfs">FCFS</option>
+                        <option value="auction">AUCTION</option>
+                    </select>
+    
+                    <label>Номер рейса:</label>
+                    <input type="text" name="flight">
+    
+                    <label>Комментарии:</label>
+                    <textarea name="comment"></textarea>
+    
+                    <label>Контакт пассажира:</label>
+                    <input type="text" name="contact" required>
+    
+                    <div class="modal-actions">
+                        <button type="button" onclick="closeOrder()">Отмена</button>
+                        <button type="submit">Опубликовать</button>
+                    </div>
+                    </form>
+            </div>
 
-        <label>Адрес подачи:</label>
-        <input type="text" name="from" placeholder="Откуда" required>
-        <!-- <input type="text" name="from2" placeholder="Доп. адрес (опционально)"> -->
-
-        <label>Адрес назначения:</label>
-        <input type="text" name="to" required>
-
-        <label>Дата и время подачи:</label>
-        <input type="datetime-local" name="datetime" required>
-
-        <label>Класс авто:</label>
-        <select name="car_class" required>
-            <option value="Эко">Эко</option>
-            <option value="Комфорт">Комфорт</option>
-            <option value="Бизнес">Бизнес</option>
-        </select>
-
-        <label>Стоимость заказа (0 = аукцион):</label>
-        <input type="number" name="price" min="0">
-
-        <label>Режим заказа:</label>
-        <select name="mode" required>
-            <option value="fcfs">FCFS</option>
-            <option value="auction">AUCTION</option>
-        </select>
-
-        <label>Номер рейса:</label>
-        <input type="text" name="flight">
-
-        <label>Комментарии:</label>
-        <textarea name="comment"></textarea>
-
-        <label>Контакт пассажира:</label>
-        <input type="text" name="contact" required>
-
-        <div class="modal-actions">
-            <button type="button" onclick="closeOrder()">Отмена</button>
-            <button type="submit">Опубликовать</button>
         </div>
-        </form>
-    </div>
     </div>
 
     <div class="root">

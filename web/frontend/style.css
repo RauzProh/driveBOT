@@ -371,6 +371,10 @@
       z-index: 1000;
 }
 
+.border_box {
+    border: 1px solid #d8b65d;
+}
+
 /* окно */
 .modal {
     background: white;
