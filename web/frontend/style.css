@@ -223,9 +223,9 @@
 .status {
     font-size: 14px;
     font-weight: 500;
-    color: #FFFFFF;
+    color: #ff0000;
     border-radius: 20px;
-    background-color: #1554A9;
+    /* background-color: #1554A9; */
     padding: 2px 8px;
     text-transform: uppercase;
 }
