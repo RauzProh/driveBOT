@@ -333,16 +333,20 @@ async function renderOrders() {
             <div>${driverid}</div>
           </div>
           <div class="status ${statusClass}">${statusClass}</div>
-          <div class="ordertype">${modeText}</div>
+          <div class="ordertype">Тип - ${modeText}</div>
           <div class="orderid">#${order.id}</div>
         </div>
-        <div class="from">Откуда: ${escapeHtml(fromText)}</div>
-        <div class="lline">
-            <div class="to">Куда: ${escapeHtml(order.to_address || "Без водителя")}</div>
-            <div style="margin-left: auto;">
-                <button class="cancelbtn">Отменить</button>
+        <div class="card-adreses">
+            <div class="row">
+                <div class="label">Откуда:</div>
+                <div class="value">${escapeHtml(fromText)}</div>
+            </div>
+            <div class="row">
+                <div class="label">Куда:</div>
+                <div class="value">${escapeHtml(order.to_address || "Без водителя")}</div>
             </div>
         </div>
+        <div class="card-cancel-btn"><button class="cancelbtn">Отменить </button></div>
       </div>
     `;
 

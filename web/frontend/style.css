@@ -26,11 +26,14 @@
     flex-direction: column; 
 }
 
+.underline {
+  text-decoration: underline; /* подчеркивание */
+}
 
 .navbar {
     align-items: center;
-    background-color: #D9D9D9;
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
+    background-color: black;
     display: flex;
     height: 56px;
     padding: 0 16px;
@@ -48,6 +51,12 @@
     margin-left: 16px;
 }
 
+.logo {
+    font-size: 24px;
+    font-weight: 600;
+    color: #D8B65D;
+}
+
 
 .trips-new-filters-desktop {
     box-shadow: 0 16px 16px rgba(5, 31, 28, .06), 0 7px 8px rgba(5, 31, 28, .12);
@@ -56,22 +65,24 @@
     align-items: center;
     padding: 0 16px;
     border-bottom: 1px solid #e0e0e0;
-    background-color: #D9D9D9;
+    background-color: #000000;
+    color: #FFFFFF;
     position: sticky;
     /* top: 56px; */
     z-index: 5;
     width: 100%;
-
-
 }
-.menu-item {}
+
+.trips-filter-block__label {}
+
+
 
 .menu-item {
     align-items: center;
     cursor: pointer;
     display: flex;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 24px;
+    font-weight: 600;
     height: 32px;
     justify-content: center;
     margin-right: 8px;
@@ -120,16 +131,39 @@
 }
 
 .trip-card {
-    background-color: #D9D9D9;
-    border: 1px dashed #e0e3e3;
+    /* background-color: #D9D9D9;
+     */
+    border: 1px solid #d8b65d;
     border-radius: 8px;
     font-size: 14px;
-    padding: 6px 8px 8px;
+    padding: 8px;
     position: relative;
     transition: .18s;
     margin-bottom: 8px;
 }
 
+.card-adreses {
+  display: flex;
+  flex-direction: column; /* две строки */
+  gap: 10px; /* расстояние между строками */
+}
+
+.row {
+  display: flex; /* две колонки в строке */
+  gap: 10px;
+  align-items: center;
+}
+
+.label {
+  flex: 0 0 auto; /* подстраивается под текст */
+  font-weight: bold;
+}
+
+.value {
+  flex: 1 1 auto; /* растягивается на всю оставшуюся ширину */
+  /* background-color: #f0f0f0; */
+  padding: 5px;
+}
 
 .trips-new-details_desktop {
     background: #fff;
@@ -158,6 +192,7 @@
     gap: 12px;
     align-items: center;
     margin-bottom: 8px;
+    align-items: start;
 }
 
 .lline{
@@ -165,15 +200,34 @@
     flex-direction: row;
 }
 
+.fordriver{
+    color: #1554A9;
+
+}
+
+.card-cancel-btn {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+}
 
 .order_info {
     display: flex;
     align-items: center;
     gap: 4px;
     margin-right: auto;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
 
+}
+.status {
+    font-size: 14px;
+    font-weight: 500;
+    color: #FFFFFF;
+    border-radius: 20px;
+    background-color: #1554A9;
+    padding: 2px 8px;
+    text-transform: uppercase;
 }
 
 .time {
@@ -201,7 +255,7 @@
     color: #1890FF;
     font-size: 20px;
     font-weight: 600;
-    background-color: #D9D9D9;
+    background-color: transparent;
 }
 
 .createorder:hover{
@@ -407,6 +461,7 @@ button:hover {
   display: flex;
   gap: 20px;
   background: #D9D9D9;
+  border: 1px solid #d8b65d;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   padding: 16px;

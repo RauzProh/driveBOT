@@ -3,6 +3,7 @@
 <head>
   <title>Login</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- <h1>Login</h1>
@@ -88,7 +89,7 @@
             </a>
             <div class="menu">
                 <a href="/">
-                    <div class="menu-item">Заказы</div>
+                    <div class="menu-item underline">Заказы</div>
                 </a>
                 <a href="/drivers">
 
@@ -104,7 +105,7 @@
     
         <div class="trips">
                <div class="trips-new-filters-desktop">
-                <!-- <div class="trips-filter-block">
+                <div class="trips-filter-block">
                     <div class="trips-filter-block__label">Водитель</div>
 
                     <div class="select-custom">
@@ -118,14 +119,14 @@
                         </div>
                         </div>
                     </div>
-                </div> -->
+                </div>
                 <div class="createorder"><button class="createorder" onclick="createOrderOpen()">
                     Создать
                 </button></div>
             </div>
             <div class="trip-content">
                 <div class="trips-new-list">
-                    <!-- <div class="trips-new-list-date">1 сентября</div>
+                    <div class="trips-new-list-date">1 сентября</div>
                     <div class="trip-card">
                         <div class="fline">
                             <div class="time">12:00</div>
@@ -136,19 +137,26 @@
                                     <div class="price">2500 ₽</div>
 
                                 </div>
-                                <div>Прохоров Кирилл</div>
+                                <div class="fordriver">Прохоров Кирилл</div>
                             </div>
                             <div class="status confirmed">Подтвержден</div>
                             <div class="ordertype">Auction</div>
                             <div class="orderid">#21412421</div>
                         </div>
-                        <div class="from">Москва, ул. Ленина, 1</div>
-                        <div class="lline">
-                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
-                            <div style="margin-left: auto;">
-                                <button class="cancelbtn">Отменить </button>
+                        <div class="card-adreses">
+                            <div class="row">
+                                <div class="label">Откуда:</div>
+                                <div class="value">Москва, ул. Ленина, 1</div>
+                            </div>
+                            <div class="row">
+                                <div class="label">Куда:</div>
+                                <div class="value">Санкт-Петербург, ул. Пушкина, 10</div>
                             </div>
                         </div>
+                        <div class="lline">
+                            
+                        </div>
+                        <div class="card-cancel-btn"><button class="cancelbtn">Отменить </button></div>
                     </div>
                     <div class="trip-card">
                         <div class="fline">
@@ -169,7 +177,7 @@
                             <div class="from">Москва, ул. Ленина, 1</div>
                             <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
                         </div>
-                    </div> -->
+                    </div>
                     
                 </div>
                 <div class="trips-new-details trips-new-details_desktop" style="display: none;">wadwa</div>
