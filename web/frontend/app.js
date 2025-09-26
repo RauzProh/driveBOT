@@ -13,6 +13,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderDrivers();
   } else if (path === "/") {
     renderOrders();
+    renderSuppliersForOrder()
+    renderSuppliersForDetails()
+    renderDriversForDetails()
+  } else if (path === "/suppliers") {
+    renderSuppliers();
   }
 });
 
@@ -20,12 +25,51 @@ document.addEventListener("DOMContentLoaded", async () => {
   const path = window.location.pathname;
   if (path === "/drivers") {
 
-  } else if (path === "/") {
+  } else if (path === "/suppliers") {
+    document.getElementById("supplieForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const suplier = Object.fromEntries(formData.entries());
+    console.log("Новый поставщик:", suplier);
+    // createOrder(order);
+    createSupplier(suplier);
+
+    // TODO: отправка на сервер через fetch("/create-order", {method:"POST", body: JSON.stringify(order)})
+    
+    alert("Поставщик добавлен!");
+    closeSupplier();
+    renderSuppliers()
+    // renderOrders(); // обновляем список заказов
+    // Очищаем форму
+    form.reset();
+    });
+
+  }else if (path === "/") {
         // запуск при загрузке страницы
     updateLeft();
 
     // запуск при изменении размера окна
     window.addEventListener('resize', updateLeft);
+
+    // Делегирование кликов на контейнер
+    container.addEventListener("click", (event) => {
+    const card = event.target.closest(".trip-card");
+    if (!card) return; // Клик вне карточки — игнорируем
+
+    if (event.target.classList.contains("cancelbtn")) {
+        // Клик по кнопке отмены
+        const orderId = card.dataset.orderId;
+        cancelOrder(orderId);
+        renderOrders();
+    } else {
+        // Клик по карточке (не кнопка)
+        const orderId = card.dataset.orderId;
+        DetailsOpen(orderId)
+        console.log("Клик на карточку, orderId:", orderId);
+        // showOrderDetails(orderId);
+    }
+    });
 
 
 
@@ -37,6 +81,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const order = Object.fromEntries(formData.entries());
     console.log("Новый заказ:", order);
     createOrder(order);
+
+    // TODO: отправка на сервер через fetch("/create-order", {method:"POST", body: JSON.stringify(order)})
+    
+    alert("Заказ создан!");
+    closeOrder();
+    renderOrders(); // обновляем список заказов
+    // Очищаем форму
+    form.reset();
+    });
+    document.getElementById("orderDetailsForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const order_id = form.dataset.id
+    console.log(order_id)
+    const formData = new FormData(form);
+    const order = Object.fromEntries(formData.entries());
+    order.id = parseInt(order_id);
+    console.log("обновление заказа заказ:", order);
+    updateOrder(order);
 
     // TODO: отправка на сервер через fetch("/create-order", {method:"POST", body: JSON.stringify(order)})
     
@@ -79,7 +142,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         localStorage.setItem("token", data.access_token); // сохраняем
         // document.getElementById("result").innerText = "Logged in!";
         document.getElementById("loginOverlay").style.display = "none"; // скрыть окно
-        renderOrders(); // загрузить заказы
+        const path = window.location.pathname;
+        if (path === "/drivers") {
+            renderDrivers();
+        } else if (path === "/") {
+            renderOrders();
+            renderSuppliersForOrder()
+            renderSuppliersForDetails()
+            renderDriversForDetails()
+        } else if (path === "/suppliers") {
+            renderSuppliers();
+        }
         // alert("Успешный вход!");
     } else {
         alert("Неверный логин или пароль!");
@@ -180,15 +253,97 @@ async function createOrder(order) {
   }
 }
 
+async function updateOrder(order) {
+    const token = localStorage.getItem("token");
+    console.log("Creating order with token:", token, "and order:", order); // <--- добавь
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
+
+  try {
+    const response = await fetch("/update-order", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`, // токен пользователя
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(order) // отправляем JSON, а не formData
+    });
+
+    const data = await response.json();
+    console.log("Response from updateOrder:", data);
+
+    if (response.ok) {
+      console.log("Заказ обновлен:", data);
+    } else {
+      console.error("Ошибка при обновлении заказа:", data);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Ошибка запроса:", error);
+    return { status: "error", detail: error.message };
+  }
+}
+
+
+async function createSupplier(supplier) {
+    const token = localStorage.getItem("token");
+    console.log("Creating order with token:", token, "and supplier:", supplier); // <--- добавь
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
+
+  try {
+    const response = await fetch("/create-supplier", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`, // токен пользователя
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(supplier) // отправляем JSON, а не formData
+    });
+
+    const data = await response.json();
+    console.log("Response from createOrder:", data);
+
+    if (response.ok) {
+      console.log("Заказ создан:", data);
+    } else {
+      console.error("Ошибка при создании заказа:", data);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Ошибка запроса:", error);
+    return { status: "error", detail: error.message };
+  }
+}
+
 
 const block = document.querySelector('.trips-new-details_desktop');
+
+async function DetailsOpen(id) {
+    block.style.display = "flex";
+    const orders = await getOrders()
+    console.log(orders)
+    console.log(orders[1])
+    renderDetails(orders[parseInt(id)-1])
+    
+}
+
+function closeDetails() {
+  block.style.display = "none";
+}
 
 function updateLeft() {
     console.log('Updating left position');
     const screenWidth = window.innerWidth; // ширина экрана
     const blockWidth = block.offsetWidth;   // ширина блока
     block.style.position = 'absolute';      // обязательно absolute
-    block.style.left = `${screenWidth / 2 - blockWidth / 2}px`; // центрирование
+    block.style.left = `${screenWidth / 2}px`; // центрирование
 }
 
 
@@ -224,6 +379,15 @@ function closeOrder() {
 }
 
 
+function createSupplierOpen() {
+  document.getElementById("supplierOverlay").style.display = "flex";
+}
+
+function closeSupplier() {
+  document.getElementById("supplierOverlay").style.display = "none";
+}
+
+
 
 
 
@@ -247,6 +411,36 @@ async function getDrivers() {
     if (response.ok) {
       console.log("Полученные водители", data.drivers);
       return data.drivers;
+    } else {
+      console.error("Ошибка при получении заказов:", data);
+      return [];
+    }
+  } catch (error) {
+    console.error("Ошибка запроса:", error);
+    return [];
+  }
+}
+
+async function getSuppliers() {
+     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Пожалуйста, войдите в систему.");
+        return;
+    }
+  try {
+    const response = await fetch("/getsuppliers", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Полученные поставщики", data.suppliers);
+      return data.suppliers;
     } else {
       console.error("Ошибка при получении заказов:", data);
       return [];
@@ -319,6 +513,9 @@ async function renderOrders() {
     const statusClass = order.status || "";
     const modeText = (order.mode === "fcfs") ? "FCFS" : (order.mode === "auction" ? "Auction" : order.mode);
     const driverid = order.driver_id || "—";
+    console.log(order)
+    console.log(drivers)
+    const drivername = drivers[order.driver_id-1].full_name
 
     const cardHtml = `
       <div class="trip-card" data-order-id="${order.id}">
@@ -330,21 +527,17 @@ async function renderOrders() {
               <div class="devinder"></div>
               <div class="price">${priceText}</div>
             </div>
-            <div>${driverid}</div>
+            <div>${drivername}</div>
           </div>
           <div class="status ${statusClass}">${statusClass}</div>
           <div class="ordertype">Тип - ${modeText}</div>
-          <div class="orderid">#${order.id}</div>
+          <div class="orderid">${order.price_0} ₽ | ${order.ordernumb}        #${order.id}</div>
         </div>
         <div class="card-adreses">
-            <div class="row">
-                <div class="label">Откуда:</div>
-                <div class="value">${escapeHtml(fromText)}</div>
-            </div>
-            <div class="row">
-                <div class="label">Куда:</div>
-                <div class="value">${escapeHtml(order.to_address || "Без водителя")}</div>
-            </div>
+            <div class="from-text">Откуда:</div>
+            <div class="from">${escapeHtml(fromText)}</div>
+            <div class="to-text">Куда:</div>
+            <div class="to">${escapeHtml(order.to_address || "Без водителя")}</div>
         </div>
         <div class="card-cancel-btn"><button class="cancelbtn">Отменить </button></div>
       </div>
@@ -353,15 +546,32 @@ async function renderOrders() {
     container.insertAdjacentHTML("beforeend", cardHtml);
   }
 
-  // Навешиваем обработчики на кнопки через отдельную функцию
-  container.querySelectorAll(".cancelbtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const orderId = btn.closest(".trip-card").dataset.orderId;
-      cancelOrder(orderId);
-      renderOrders(); // обновляем список заказов
-    });
-  });
+//   // Навешиваем обработчики на кнопки через отдельную функцию
+//   container.querySelectorAll(".cancelbtn").forEach(btn => {
+//     btn.addEventListener("click", () => {
+//       const orderId = btn.closest(".trip-card").dataset.orderId;
+//       cancelOrder(orderId);
+//       renderOrders(); // обновляем список заказов
+//     });
+//   });
+//   container.querySelectorAll(".trip-card").forEach(card => {
+//   card.addEventListener("click", (event) => {
+//     // Если клик не по кнопке
+//     if (!event.target.classList.contains("cancelbtn")) {
+//       const orderId = card.dataset.orderId;
+//       console.log("Клик на карточку, orderId:", orderId);
+//       // Здесь твоё действие при клике на карточку
+//       showOrderDetails(orderId);
+//     }
+//   });
+// });
 }
+
+
+const container = document.querySelector(".trips-new-list");
+
+
+
 
 // простая защита от инъекций, если данные из внешнего источника
 function escapeHtml(str) {
@@ -441,4 +651,123 @@ async function renderDrivers() {
     list.appendChild(card);
   });
 }
+async function renderSuppliers() {
+  const suppliers = await getSuppliers();
+  const list = document.querySelector(".suppliers-list");
+  list.innerHTML = ""; // очистка
 
+  suppliers.forEach(driver => {
+    const name = driver.name
+    const card = document.createElement("div");
+    card.className = "supplier-card";
+
+    card.innerHTML = `
+      <div>
+            ${driver.name || ""}
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+async function renderSuppliersForOrder() {
+  const suppliers = await getSuppliers();
+  const form = document.getElementById("orderForm");
+  if (!form) return;
+
+  const select = form.querySelector('select[name="supplier"]');
+  if (!select) return;
+
+  select.innerHTML = '<option value="" disabled selected>Выберите поставщика</option>';
+
+  suppliers.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+}
+
+async function renderSuppliersForDetails() {
+  const suppliers = await getSuppliers();
+  const form = document.getElementById("orderDetailsForm");
+  if (!form) return;
+
+  const select = form.querySelector('select[name="supplier"]');
+  if (!select) return;
+
+  select.innerHTML = '<option value="" disabled selected>Выберите поставщика</option>';
+
+  suppliers.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+}
+
+async function renderDriversForDetails() {
+  const suppliers = await getDrivers();
+  const form = document.getElementById("orderDetailsForm");
+  if (!form) return;
+
+  const select = form.querySelector('select[name="driver"]');
+  if (!select) return;
+
+  select.innerHTML = '<option value="" disabled selected>None</option>';
+
+  suppliers.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.full_name;
+    select.appendChild(opt);
+  });
+}
+
+
+async function renderDetails(order) {
+    if (!order || typeof order !== "object") {
+    console.warn("renderDetails получил пустой order:", order);
+    return;
+  }
+  const form = document.getElementById("orderDetailsForm");
+  form.dataset.id = order.id
+  if (!form) return;
+
+  const mapping = {
+    ordernumb: "ordernumb",
+    city: "region",
+    supplier_id: "supplier",
+    from_address: "from",
+    to_address: "to",
+    scheduled_time: "datetime",
+    car_class: "car_class",
+    price_0: "price_0",
+    price: "price",
+    mode: "mode",
+    trip_number: "flight",
+    comments: "comment",
+    passenger_info: "contact",
+    supplier: "supplier_id"
+  };
+
+  for (const [key, fieldName] of Object.entries(mapping)) {
+    const field = form.elements[fieldName];
+    if (!field) continue;
+    if(key==='supplier_id') {
+        console.log(fieldName)
+        console.log(key)
+        console.log(order)
+        console.log(order[key])
+    }
+    let value = order[key];
+
+    // спец-обработка для datetime-local
+    if (field.type === "datetime-local" && value) {
+      // отрезаем секунды и Z если есть
+      value = value.slice(0, 16);
+    }
+
+    field.value = value ?? "";
+  }
+}

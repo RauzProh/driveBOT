@@ -31,6 +31,11 @@
             <div class="modal">
                     <h2>Создание заказа</h2>
                     <form id="orderForm">
+                    
+                    <label>Номер заказа</label>
+                    <input type="text" name="ordernumb" required>
+
+
                     <label>Регион заказа:</label>
                     <!-- <input type="text" name="region" required> -->
                     <select name="region" required>
@@ -38,25 +43,34 @@
                         <option value="Ставропольский край">Ставропольский край</option>
                         <option value="Крым">Крым</option>
                     </select>
-    
+                    <label>Чей заказ:</label>
+                    <select name="supplier" required>
+                        <option value="" disabled selected>None</option>
+                    </select>
+                    
                     <label>Адрес подачи:</label>
                     <input type="text" name="from" placeholder="Откуда" required>
                     <!-- <input type="text" name="from2" placeholder="Доп. адрес (опционально)"> -->
     
                     <label>Адрес назначения:</label>
-                    <input type="text" name="to" required>
+                    <input type="text" name="to" placeholder="Куда" required>
     
                     <label>Дата и время подачи:</label>
                     <input type="datetime-local" name="datetime" required>
     
                     <label>Класс авто:</label>
                     <select name="car_class" required>
-                        <option value="Эко">Эко</option>
+                        <option value="Стандарт">Стандарт</option>
                         <option value="Комфорт">Комфорт</option>
+                        <option value="Комфорт+">Комфорт+</option>
+                        <option value="Минивэн">Минивэн</option>
                         <option value="Бизнес">Бизнес</option>
                     </select>
-    
-                    <label>Стоимость заказа (0 = аукцион):</label>
+                    
+                    <label>Стоимость заказа</label>
+                    <input type="number" name="price_0" min="0">
+
+                    <label>Cтоимость водителю</label>
                     <input type="number" name="price" min="0">
     
                     <label>Режим заказа:</label>
@@ -98,6 +112,10 @@
 
                     <div class="menu-item">Водители</div>
                 </a>
+                <a href="/suppliers">
+
+                    <div class="menu-item">Поставщики</div>
+                </a>
                 <!-- <div class="menu-item">Авто</div>
                 <div class="menu-item">Клиенты</div>
                 <div class="menu-item">Отчеты</div>
@@ -108,7 +126,7 @@
     
         <div class="trips">
                <div class="trips-new-filters-desktop">
-                <div class="trips-filter-block">
+                <!-- <div class="trips-filter-block">
                     <div class="trips-filter-block__label">Водитель</div>
 
                     <div class="select-custom">
@@ -122,7 +140,7 @@
                         </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <div class="createorder"><button class="createorder" onclick="createOrderOpen()">
                     Создать
                 </button></div>
@@ -147,14 +165,10 @@
                             <div class="orderid">#21412421</div>
                         </div>
                         <div class="card-adreses">
-                            <div class="row">
-                                <div class="label">Откуда:</div>
-                                <div class="value">Москва, ул. Ленина, 1</div>
-                            </div>
-                            <div class="row">
-                                <div class="label">Куда:</div>
-                                <div class="value">Санкт-Петербург, ул. Пушкина, 10</div>
-                            </div>
+                            <div class="from-text">Откуда:</div>
+                            <div class="from">Москва, ул. Ленина, 1</div>
+                            <div class="to-text">Куда:</div>
+                            <div class="to">Санкт-Петербург, ул. Пушкина, 10</div>
                         </div>
                         <div class="lline">
                             
@@ -183,7 +197,79 @@
                     </div>
                     
                 </div>
-                <div class="trips-new-details trips-new-details_desktop" style="display: none;">wadwa</div>
+                <div class="trips-new-details trips-new-details_desktop" style="display: none;">
+                    <div class="modal">
+                                <h2>Редактирование заказа</h2>
+                                <form id="orderDetailsForm">
+                                
+                                <label>Номер заказа</label>
+                                <input type="text" name="ordernumb" required>
+
+                                <label>Водитель</label>
+                                <select name="driver" required>
+                                    <option value="" disabled selected>None</option>
+                                </select>
+
+
+                                <label>Регион заказа:</label>
+                                <!-- <input type="text" name="region" required> -->
+                                <select name="region" required>
+                                    <option value="Краснодарский край">Краснодарский край</option>
+                                    <option value="Ставропольский край">Ставропольский край</option>
+                                    <option value="Крым">Крым</option>
+                                </select>
+                                <label>Чей заказ:</label>
+                                <select name="supplier" required>
+                                    <option value="" disabled selected>Выберите поставщика</option>
+                                </select>
+                                
+                                <label>Адрес подачи:</label>
+                                <input type="text" name="from" placeholder="Откуда" required>
+                                <!-- <input type="text" name="from2" placeholder="Доп. адрес (опционально)"> -->
+                
+                                <label>Адрес назначения:</label>
+                                <input type="text" name="to" placeholder="Куда" required>
+                
+                                <label>Дата и время подачи:</label>
+                                <input type="datetime-local" name="datetime" required>
+                
+                                <label>Класс авто:</label>
+                                <select name="car_class" required>
+                                    <option value="Стандарт">Стандарт</option>
+                                    <option value="Комфорт">Комфорт</option>
+                                    <option value="Комфорт+">Комфорт+</option>
+                                    <option value="Минивэн">Минивэн</option>
+                                    <option value="Бизнес">Бизнес</option>
+                                </select>
+                                
+                                <label>Стоимость заказа</label>
+                                <input type="number" name="price_0" min="0">
+
+                                <label>Cтоимость водителю</label>
+                                <input type="number" name="price" min="0">
+                
+                                <label>Режим заказа:</label>
+                                <select name="mode" required>
+                                    <option value="fcfs">FCFS</option>
+                                    <option value="auction">AUCTION</option>
+                                </select>
+                
+                                <label>Номер рейса:</label>
+                                <input type="text" name="flight">
+                
+                                <label>Комментарии:</label>
+                                <textarea name="comment"></textarea>
+                
+                                <label>Контакт пассажира:</label>
+                                <input type="text" name="contact" required>
+                
+                                <div class="modal-actions">
+                                    <button type="button" onclick="closeDetails()">Отмена</button>
+                                    <button type="submit">Изменить</button>
+                                </div>
+                                </form>
+                        </div>
+                </div>
                 <div class="trips-new-info"></div>
                 <!-- <div class="trips-new-info">Информация о заказе</div> -->
             </div>

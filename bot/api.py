@@ -8,8 +8,12 @@ from db.models.order import OrderStatus, Order
 from db.crud.order import get_all_orders, create_order, update_order, get_order_by_id
 from db.crud.order_messages import get_order_messages, delete_order_message
 from db.crud.user import get_all_drivers, get_user_by_id
+from db.crud.supplier import get_all_supplier, create_suppliers
 
 from schemas.order import OrderCreate
+from schemas.supplier import SupplierCreate
+
+import logging
 
 app = FastAPI()
 API_KEY = "mysecret123"  # секрет для внутреннего API
@@ -21,17 +25,20 @@ async def create_order_api(order: OrderCreate, x_api_key: str = Header(...)):
 
     # маппинг из API-модели в модель БД
     db_order = await create_order(
+        ordernumb=order.ordernumb,
         city=order.region,
         from_address=order.from_,
         to_address=order.to,
         scheduled_time=order.datetime,
         car_class=order.car_class,
+        price_0=order.price_0,
         price=order.price,
         mode=order.mode,
         trip_number=order.flight,
         comments=order.comment,
         passenger_info=order.contact,
-        status=OrderStatus.NEW
+        status=OrderStatus.NEW,
+        supplier_id=order.supplier
     )
 
 
@@ -40,6 +47,48 @@ async def create_order_api(order: OrderCreate, x_api_key: str = Header(...)):
 
 
     return {"status": "ok", "order_id": db_order.id}
+
+@app.post("/update-order")
+async def create_order_api(order: OrderCreate, x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    logging.info("ОБНОВЛЕНИЕ НАЧАЛОСЬ")
+    try:
+        # маппинг из API-модели в модель БД
+        db_order = await update_order(
+            order_id = order.id,
+            driver_id = order.driver,
+            ordernumb=order.ordernumb,
+            city=order.region,
+            from_address=order.from_,
+            to_address=order.to,
+            scheduled_time=order.datetime,
+            car_class=order.car_class,
+            price_0=order.price_0,
+            price=order.price,
+            mode=order.mode,
+            trip_number=order.flight,
+            comments=order.comment,
+            passenger_info=order.contact,
+            status=OrderStatus.NEW,
+            supplier_id=order.supplier
+        )
+    except Exception as e:
+        logging.info("ОШИБКА ОБНОВЛЕНИЯ")
+        logging.info(e)
+
+
+    logging.info("взгрев")
+    logging.info(db_order.__dict__)
+
+
+
+
+
+    return {"status": "ok", "order_id": db_order.id}
+
+
+
 
 
 @app.post("/cancel-order/{order_id}")
@@ -95,6 +144,32 @@ async def get_orders(x_api_key: str = Header(...)):
     drivers = await get_all_drivers()
     print(f"Fetched drivers: {drivers}")
     return {"drivers": [driver.__dict__ for driver in drivers]}
+
+@app.get('/getsuppliers')
+async def get_orders(x_api_key: str = Header(...)):
+    print(f"Received x_api_key: {x_api_key}")
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    drivers = await get_all_supplier()
+    print(f"Fetched suppliers: {drivers}")
+    return {"suppliers": [driver.__dict__ for driver in drivers]}
     
+@app.post("/create-supplier")
+async def create_order_api(supplier: SupplierCreate, x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    # маппинг из API-модели в модель БД
+    db_suppliers = await create_suppliers(
+        name=supplier.name,
+    )
+
+
+
+
+    return {"status": "ok", "supplier_id": db_suppliers.id}
+
+
+
 
 
