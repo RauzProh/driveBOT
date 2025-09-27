@@ -551,7 +551,7 @@ async function renderOrders() {
           <div class="status ${statusClass}">${statusClass}</div>
           <div class="ordertype">Тип - ${modeText}</div>
           
-          <div> <div class="orderid">${order.price_0} ₽ | ${order.ordernumb}        #${order.id}</div>
+          <div class="orderid"> <div class="orderid">${order.price_0} ₽ | ${order.ordernumb}        #${order.id}</div>
             <div class='card_supplier_text'> ${suplier} </div>
           </div>
         </div>
