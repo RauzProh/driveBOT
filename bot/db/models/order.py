@@ -21,7 +21,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ordernumb: Mapped[str] = mapped_column(String(100), nullable=False)
+    ordernumb: Mapped[str] = mapped_column(String(100), nullable=True)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     from_address: Mapped[str] = mapped_column(String(255), nullable=False)
     to_address: Mapped[str] = mapped_column(String(255), nullable=False)
