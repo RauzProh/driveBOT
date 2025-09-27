@@ -27,7 +27,7 @@ class Order(Base):
     to_address: Mapped[str] = mapped_column(String(255), nullable=False)
     scheduled_time: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
     car_class: Mapped[str] = mapped_column(String(50), nullable=False)
-    price_0: Mapped[float] = mapped_column(DECIMAL(10,2), default=None)
+    price_0: Mapped[float] = mapped_column(DECIMAL(10,2), default=None, nullable=True)
     price: Mapped[float] = mapped_column(DECIMAL(10,2), default=None)
     mode: Mapped[OrderMode] = mapped_column(Enum(OrderMode), default=OrderMode.FCFS)
     trip_number: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
