@@ -4,7 +4,7 @@ from typing import Optional
 
 class OrderRequest(BaseModel):
     driver: Optional[int] = None       # теперь Optional
-    id: int
+    id: Optional[int] = None
     ordernumb: Optional[str] = None    # тоже Optional
     region: str
     from_: str = Field(..., alias="from")

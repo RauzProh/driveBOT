@@ -4,7 +4,7 @@ from typing import Optional
 from db.models.order import OrderMode
 
 class OrderCreate(BaseModel):
-    id: int
+    id: Optional[int] = None
     driver: Optional[int] = None         # теперь Optional
     ordernumb: Optional[str] = None      # теперь Optional
     region: str
