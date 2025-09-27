@@ -515,7 +515,10 @@ async function renderOrders() {
     const driverid = order.driver_id || "—";
     console.log(order)
     console.log(drivers)
-    const drivername = drivers[order.driver_id-1].full_name
+    const drivername = "-"
+    if (order.driver_id) {
+         drivername = drivers[order.driver_id-1].full_name
+    }
 
     const cardHtml = `
       <div class="trip-card" data-order-id="${order.id}">
