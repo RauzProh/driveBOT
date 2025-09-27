@@ -31,9 +31,12 @@ async def broadcast_order(bot, order: Order):
     print(drivers)
     for driver in drivers:
         print('driver')
+        flag = 0
+        if order.mode == OrderMode.FCFS:
+            flag = 1
         msg = await bot.send_message(
             driver.tg_id,
-            f" {"❗ Новый заказ" if order.price else '❓Новый запрос'} №{order.id}:\n"
+            f" {"❗ Новый заказ" if flag else '❓Новый запрос'} №{order.id}:\n"
             f"🕐 Время: {order.scheduled_time}\n"
             f"🚖 Класс авто: {order.car_class}\n"
             f"⛳ {order.from_address} → {order.to_address}\n"
