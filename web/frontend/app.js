@@ -483,6 +483,7 @@ async function cancelOrder(orderId) {
 async function renderOrders() {
   const orders = await getOrders();
   const drivers = await getDrivers();
+  const suppliers = await getSuppliers()
   console.log(drivers)
   const container = document.querySelector(".trips-new-list");
   container.innerHTML = "";
@@ -525,6 +526,16 @@ async function renderOrders() {
         }
         }
 
+    let suplier = "-"
+    if (order.supplier_id) {
+        const supplier = suppliers.find(d => d.id === order.supplier_id);
+        if (supplier) {
+            suplier = supplier.name; // или нужное поле
+        }
+        }
+
+    
+
     const cardHtml = `
       <div class="trip-card" data-order-id="${order.id}">
         <div class="fline">
@@ -539,7 +550,10 @@ async function renderOrders() {
           </div>
           <div class="status ${statusClass}">${statusClass}</div>
           <div class="ordertype">Тип - ${modeText}</div>
-          <div class="orderid">${order.price_0} ₽ | ${order.ordernumb}        #${order.id}</div>
+          
+          <div> <div class="orderid">${order.price_0} ₽ | ${order.ordernumb}        #${order.id}</div>
+            <div class='card_supplier_text'> ${suplier} </div>
+          </div>
         </div>
         <div class="card-adreses">
             <div class="from-text">Откуда:</div>
