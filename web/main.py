@@ -69,7 +69,7 @@ def create_order(order: OrderRequest, user: dict = Depends(get_current_user)):
 
     logging.info(order)
 
-    order_data = order.dict()
+    order_data = order.dict(by_alias=True)
     order_data["user"] = user["username"]
 
     # сериализуем datetime в строку
@@ -102,7 +102,7 @@ def create_order(order: OrderRequest, user: dict = Depends(get_current_user)):
 
     logging.info(order)
 
-    order_data = order.dict()
+    order_data = order.dict(by_alias=True)
     order_data["user"] = user["username"]
 
     # сериализуем datetime в строку

@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     order.id = parseInt(order_id);
     console.log("обновление заказа заказ:", order);
     updateOrder(order);
+    closeDetails()
 
     // TODO: отправка на сервер через fetch("/create-order", {method:"POST", body: JSON.stringify(order)})
     
