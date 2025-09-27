@@ -516,10 +516,14 @@ async function renderOrders() {
     const driverid = order.driver_id || "—";
     console.log(order)
     console.log(drivers)
-    const drivername = "-"
+    let drivername = "-"
     if (order.driver_id) {
-         drivername = drivers[order.driver_id-1].full_name
-    }
+        const driver = drivers.find(d => d.id === order.driver_id);
+        if (driver) {
+            console.log(driver)
+            drivername = driver.full_name; // или нужное поле
+        }
+        }
 
     const cardHtml = `
       <div class="trip-card" data-order-id="${order.id}">
